@@ -19,9 +19,11 @@ pub trait Db {
     fn create_comment(&mut self, &Comment) -> Result<()>;
     fn create_rating(&mut self, &Rating) -> Result<()>;
     fn create_bbox_subscription(&mut self, &BboxSubscription) -> Result<()>;
+    fn create_effect(&mut self, &Effect) -> Result<()>;
 
     fn get_entry(&self, &str) -> Result<Entry>;
     fn get_user(&self, &str) -> Result<User>;
+    fn get_effect(&self, &str) -> Result<Effect>;
 
     fn all_entries(&self) -> Result<Vec<Entry>>;
     fn all_categories(&self) -> Result<Vec<Category>>;
@@ -31,8 +33,10 @@ pub trait Db {
     fn all_comments(&self) -> Result<Vec<Comment>>;
     fn all_users(&self) -> Result<Vec<User>>;
     fn all_bbox_subscriptions(&self) -> Result<Vec<BboxSubscription>>;
+    fn all_effects(&self) -> Result<Vec<Effect>>;
 
     fn update_entry(&mut self, &Entry) -> Result<()>;
+    fn update_effect(&mut self, &Effect) -> Result<()>;
     fn confirm_email_address(&mut self, &str) -> Result<User>;
 
     fn delete_triple(&mut self, &Triple) -> Result<()>;

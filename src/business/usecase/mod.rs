@@ -25,6 +25,12 @@ impl Id for Entry {
     }
 }
 
+impl Id for Effect {
+    fn id(&self) -> String {
+        self.id.clone()
+    }
+}
+
 impl Id for Category {
     fn id(&self) -> String {
         self.id.clone()
@@ -68,7 +74,8 @@ fn triple_id(t: &Triple) -> String {
         ObjectId::User(ref id) => ("user", id),
         ObjectId::Comment(ref id) => ("comment", id),
         ObjectId::Rating(ref id) => ("rating", id),
-        ObjectId::BboxSubscription(ref id) => ("bbox_subscription", id)
+        ObjectId::BboxSubscription(ref id) => ("bbox_subscription", id),
+        ObjectId::Effect(ref id) => ("effect", id)
     };
     let (o_type, o_id) = match t.object {
         ObjectId::Entry(ref id) => ("entry", id),
@@ -76,7 +83,8 @@ fn triple_id(t: &Triple) -> String {
         ObjectId::User(ref id) => ("user", id),
         ObjectId::Comment(ref id) => ("comment", id),
         ObjectId::Rating(ref id) => ("rating", id),
-        ObjectId::BboxSubscription(ref id) => ("bbox_subscription", id)
+        ObjectId::BboxSubscription(ref id) => ("bbox_subscription", id),
+        ObjectId::Effect(ref id) => ("effect", id)
     };
     let p_type = match t.predicate {
         Relation::IsTaggedWith => "is_tagged_with",
@@ -113,6 +121,15 @@ pub struct NewEntry {
 }
 
 #[derive(Deserialize, Debug, Clone)]
+pub struct NewEffect {
+    pub title       : String,
+    pub description : String,
+    pub origin      : Option<String>,
+    pub tags        : Vec<String>,
+    pub license     : String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
 pub struct NewUser {
     pub username: String,
     pub password: String,
@@ -141,6 +158,16 @@ pub struct UpdateEntry {
     pub telephone   : Option<String>,
     pub homepage    : Option<String>,
     pub categories  : Vec<String>,
+    pub tags        : Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct UpdateEffect {
+    pub id          : String,
+    pub version     : u64,
+    pub title       : String,
+    pub description : String,
+    pub origin      : Option<String>,
     pub tags        : Vec<String>,
 }
 
@@ -373,6 +400,15 @@ pub fn get_entries<D:Db>(db : &D, ids : &[String]) -> Result<Vec<Entry>> {
     Ok(entries)
 }
 
+pub fn get_effects<D:Db>(db : &D, ids : &[String]) -> Result<Vec<Effect>> {
+    let effects = db
+        .all_effects()?
+        .into_iter()
+        .filter(|e| ids.iter().any(|id| *id == e.id))
+        .collect();
+    Ok(effects)
+}
+
 pub fn create_new_user<D: Db>(db: &mut D, u: NewUser) -> Result<()> {
     validate::username(&u.username)?;
     validate::password(&u.password)?;
@@ -466,6 +502,22 @@ pub fn create_new_entry<D: Db>(db: &mut D, e: NewEntry) -> Result<String> {
     Ok(new_entry.id)
 }
 
+pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
+    let new_effect = Effect{
+        id          :  Uuid::new_v4().simple().to_string(),
+        created     :  Utc::now().timestamp() as u64,
+        version     :  0,
+        title       :  e.title,
+        description :  e.description,
+        origin      :  e.origin,
+        license     :  Some(e.license)
+    };
+    // we don't need to val homepage and email yet: new_effect.validate()?;
+    db.create_effect(&new_effect)?;
+    set_tag_relations(db, &new_effect.id, &e.tags)?;
+    Ok(new_effect.id)
+}
+
 pub fn update_entry<D: Db>(db: &mut D, e: UpdateEntry) -> Result<()> {
     let old : Entry = db.get_entry(&e.id)?;
     if (old.version + 1) != e.version {
@@ -491,6 +543,25 @@ pub fn update_entry<D: Db>(db: &mut D, e: UpdateEntry) -> Result<()> {
     };
     db.update_entry(&new_entry)?;
     set_tag_relations(db, &new_entry.id, &e.tags)?;
+    Ok(())
+}
+
+pub fn update_effect<D: Db>(db: &mut D, e: UpdateEffect) -> Result<()> {
+    let old : Effect = db.get_effect(&e.id)?;
+    if (old.version + 1) != e.version {
+        return Err(Error::Repo(RepoError::InvalidVersion))
+    }
+    let new_effect = Effect{
+        id          :  e.id,
+        created     :  Utc::now().timestamp() as u64,
+        version     :  e.version,
+        title       :  e.title,
+        description :  e.description,
+        origin      :  e.origin,
+        license     :  old.license
+    };
+    db.update_effect(&new_effect)?;
+    set_tag_relations(db, &new_effect.id, &e.tags)?;
     Ok(())
 }
 

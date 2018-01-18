@@ -22,6 +22,19 @@ pub struct Entry {
 }
 
 #[derive(Queryable, Insertable)]
+#[table_name = "effects"]
+pub struct Effect {
+    pub id: String,
+    pub created: i32,
+    pub version: i32,
+    pub current: bool,
+    pub title: String,
+    pub description: String,
+    pub origin: Option<String>,
+    pub license: Option<String>,
+}
+
+#[derive(Queryable, Insertable)]
 #[table_name = "categories"]
 pub struct Category {
     pub id: String,

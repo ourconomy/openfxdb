@@ -19,6 +19,17 @@ pub struct Entry {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+pub struct Effect {
+    pub id          : String,
+    pub created     : u64,
+    pub version     : u64,
+    pub title       : String,
+    pub description : String,
+    pub origin	    : Option<String>,
+    pub license     : Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Category {
     pub id        : String,
     pub created   : u64,
@@ -65,7 +76,9 @@ pub enum ObjectId {
     #[serde(rename="rating")]
     Rating(String),
     #[serde(rename="bbox_subscription")]
-    BboxSubscription(String)
+    BboxSubscription(String),
+    #[serde(rename="effect")]
+    Effect(String)
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
