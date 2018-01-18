@@ -44,6 +44,32 @@ impl From<e::Entry> for Entry {
     }
 }
 
+impl From<e::Effect> for Effect {
+    fn from(e: e::Effect) -> Effect {
+        let e::Effect {
+            id,
+            created,
+            version,
+            title,
+            description,
+            origin,
+            license,
+            ..
+        } = e;
+
+        Effect {
+            id,
+            created: created as i32,
+            version: version as i32,
+            current: true,
+            title,
+            description,
+            origin,
+            license,
+        }
+    }
+}
+
 impl From<Category> for e::Category {
     fn from(c: Category) -> e::Category {
         let Category {

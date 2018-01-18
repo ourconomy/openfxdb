@@ -133,6 +133,26 @@ fn get_entry(db: State<DbPool>, ids: String) -> Result<Vec<json::Entry>> {
         .collect::<Vec<json::Entry>>()))
 }
 
+#[get("/effects/<ids>")]
+fn get_effect(db: State<DbPool>, ids: String) -> Result<Vec<json::Effect>> {
+    let ids = extract_ids(&ids);
+    let effects = usecase::get_effects(&*db.get()?, &ids)?;
+    // This won't work but the underlying functions work with but
+    // do not require Entry types in their signatures ... try w/o
+    // functions adapted for Effect type
+    let tags = usecase::get_tags_by_entry_ids(&*db.get()?, &ids)?;
+    // is needed in scope
+    let ratings = usecase::get_ratings_by_entry_ids(&*db.get()?, &ids)?;
+    Ok(Json(effects
+        .into_iter()
+        .map(|e|{
+            let t = tags.get(&e.id).cloned().unwrap_or_else(|| vec![]);
+            let r = ratings.get(&e.id).cloned().unwrap_or_else(|| vec![]);
+            json::Effect::from_effect_with_tags_and_ratings(e,t,r) 
+        })
+        .collect::<Vec<json::Effect>>()))
+}
+
 #[get("/duplicates")]
 fn get_duplicates(db: State<DbPool>) -> Result<Vec<(String, String, DuplicateType)>> {
     let entries = db.get()?.all_entries()?;
@@ -157,6 +177,26 @@ fn put_entry(db: State<DbPool>, id: String, e: Json<usecase::UpdateEntry>) -> Re
     let email_addresses = usecase::email_addresses_to_notify(&e.lat, &e.lng, &mut *db.get()?);
     let all_categories = db.get()?.all_categories()?;
     notify_update_entry(email_addresses, &e, all_categories);
+    Ok(Json(id))
+}
+
+#[put("/effects/<id>", format = "application/json", data = "<e>")]
+fn put_effect(db: State<DbPool>, id: String, e: Json<usecase::UpdateEffect>) -> Result<String> {
+    let e = e.into_inner();
+    usecase::update_effect(&mut *db.get()?, e.clone())?;
+    // let email_addresses = usecase::email_addresses_to_notify(&e.lat, &e.lng, &mut *db.get()?);
+    // let all_categories = db.get()?.all_categories()?;
+    // notify_update_entry(email_addresses, &e, all_categories);
+    Ok(Json(id))
+}
+
+#[post("/effects", format = "application/json", data = "<e>")]
+fn post_effect(db: State<DbPool>, e: Json<usecase::NewEffect>) -> Result<String> {
+    let e = e.into_inner();
+    let id = usecase::create_new_effect(&mut *db.get()?, e.clone())?;
+    //let email_addresses = usecase::email_addresses_to_notify(&e.lat, &e.lng, &mut *db.get()?);
+    //let all_categories = db.get()?.all_categories()?;
+    //notify_create_entry(email_addresses, &e, &id, all_categories);
     Ok(Json(id))
 }
 
@@ -290,9 +330,17 @@ fn get_search(db: State<DbPool>, search: SearchQuery) -> Result<json::SearchResu
         .cloned()
         .collect::<Vec<_>>();
 
+    let effects = db.get()?.all_effects()?;
+    let effects = effects
+        .iter()
+        .map(|x| &x.id)
+        .cloned()
+        .collect::<Vec<_>>();
+    
     Ok(Json(json::SearchResult {
         visible: visible_results,
         invisible: invisible_results,
+        effects: effects,
     }))
 }
 
@@ -448,10 +496,13 @@ fn rocket_instance<T: r2d2::ManageConnection>(cfg: Config, pool: Pool<T>) -> Roc
                        get_bbox_subscriptions,
                        unsubscribe_all_bboxes,
                        get_entry,
+                       get_effect,
                        post_entry,
+                       post_effect,
                        post_user,
                        post_rating,
                        put_entry,
+                       put_effect,
                        get_user,
                        get_categories,
                        get_tags,
