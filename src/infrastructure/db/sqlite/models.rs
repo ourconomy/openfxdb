@@ -61,6 +61,15 @@ pub struct EntryTagRelation {
     pub tag_id: String,
 }
 
+#[derive(Identifiable, Queryable, Insertable, Associations)]
+#[table_name = "effect_tag_relations"]
+#[primary_key(effect_id, effect_version, tag_id)]
+pub struct EffectTagRelation {
+    pub effect_id: String,
+    pub effect_version: i32,
+    pub tag_id: String,
+}
+
 #[derive(Queryable, Insertable)]
 #[table_name = "tags"]
 pub struct Tag {

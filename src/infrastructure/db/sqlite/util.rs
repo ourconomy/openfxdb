@@ -109,6 +109,16 @@ impl From<EntryTagRelation> for e::Triple {
     }
 }
 
+impl From<EffectTagRelation> for e::Triple {
+    fn from(r: EffectTagRelation) -> e::Triple {
+        e::Triple {
+            subject: e::ObjectId::Effect(r.effect_id),
+            predicate: e::Relation::IsTaggedWith,
+            object: e::ObjectId::Tag(r.tag_id),
+        }
+    }
+}
+
 impl From<Rating> for e::Triple {
     fn from(r: Rating) -> e::Triple {
         e::Triple {

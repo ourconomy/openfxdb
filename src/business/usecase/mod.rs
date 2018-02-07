@@ -221,6 +221,38 @@ fn get_triple_diff(old: &[Triple], new: &[Triple]) -> Diff<Triple> {
 fn set_tag_relations<D: Db>(db: &mut D, entry: &str, tags: &[String]) -> Result<()> {
     create_missing_tags(db, tags)?;
     let subject = ObjectId::Entry(entry.into());
+    //our: debugly
+    println!("subject in fn set_tag_relations: {:?}", subject);
+    let old_triples = db.all_triples()?
+        .into_iter()
+        .filter(|x| x.subject == subject)
+        .filter(|x| x.predicate == Relation::IsTaggedWith)
+        .collect::<Vec<Triple>>();
+    let new_triples = tags
+        .into_iter()
+        .map(|x| Triple{
+            subject: subject.clone(),
+            predicate: Relation::IsTaggedWith,
+            object: ObjectId::Tag(x.clone())
+        })
+        .collect::<Vec<Triple>>();
+
+    let diff = get_triple_diff(&old_triples, &new_triples);
+
+    for t in diff.new {
+        db.create_triple(&t)?;
+    }
+    for t in diff.deleted {
+        db.delete_triple(&t)?;
+    }
+    Ok(())
+}
+
+fn set_effect_tag_relations<D: Db>(db: &mut D, effect: &str, tags: &[String]) -> Result<()> {
+    create_missing_tags(db, tags)?;
+    let subject = ObjectId::Effect(effect.into());
+    //our: debugly
+    println!("subject in fn set_effect_tag_relations: {:?}", subject);
     let old_triples = db.all_triples()?
         .into_iter()
         .filter(|x| x.subject == subject)
@@ -264,6 +296,21 @@ pub fn get_tag_ids_for_entry_id(triples: &[Triple], entry_id: &str) -> Vec<Strin
     triples
         .iter()
         .filter(&*filter::triple_by_subject(ObjectId::Entry(entry_id.into())))
+        .filter(|triple| triple.predicate == Relation::IsTaggedWith)
+        .map(|triple|&triple.object)
+        .filter_map(|object|
+            match *object {
+                ObjectId::Tag(ref tag_id) => Some(tag_id),
+                _ => None
+            })
+        .cloned()
+        .collect()
+}
+
+pub fn get_tag_ids_for_effect_id(triples: &[Triple], effect_id: &str) -> Vec<String> {
+    triples
+        .iter()
+        .filter(&*filter::triple_by_subject(ObjectId::Effect(effect_id.into())))
         .filter(|triple| triple.predicate == Relation::IsTaggedWith)
         .map(|triple|&triple.object)
         .filter_map(|object|
@@ -352,6 +399,21 @@ pub fn get_tags_by_entry_ids<D: Db>(db: &D, ids: &[String]) -> Result<HashMap<St
         .map(|id|(
             id.clone(),
             get_tag_ids_for_entry_id(&triples, id)
+                .into_iter()
+                .map(|tag_id|Tag{id: tag_id})
+                .collect()
+        ))
+        .collect())
+}
+
+pub fn get_tags_by_effect_ids<D: Db>(db: &D, ids: &[String]) -> Result<HashMap<String, Vec<Tag>>> {
+    // fn needed because it calls a fn that needs Effect var type
+    let triples = db.all_triples()?;
+    Ok(ids
+        .iter()
+        .map(|id|(
+            id.clone(),
+            get_tag_ids_for_effect_id(&triples, id)
                 .into_iter()
                 .map(|tag_id|Tag{id: tag_id})
                 .collect()
@@ -512,9 +574,10 @@ pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
         origin      :  e.origin,
         license     :  Some(e.license)
     };
-    // we don't need to val homepage and email yet: new_effect.validate()?;
+    //our: we don't need to val homepage and email yet:
+    // new_effect.validate()?;
     db.create_effect(&new_effect)?;
-    set_tag_relations(db, &new_effect.id, &e.tags)?;
+    set_effect_tag_relations(db, &new_effect.id, &e.tags)?;
     Ok(new_effect.id)
 }
 
@@ -561,7 +624,8 @@ pub fn update_effect<D: Db>(db: &mut D, e: UpdateEffect) -> Result<()> {
         license     :  old.license
     };
     db.update_effect(&new_effect)?;
-    set_tag_relations(db, &new_effect.id, &e.tags)?;
+    //our: Changed here too:
+    set_effect_tag_relations(db, &new_effect.id, &e.tags)?;
     Ok(())
 }
 
