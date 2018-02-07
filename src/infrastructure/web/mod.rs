@@ -137,11 +137,10 @@ fn get_entry(db: State<DbPool>, ids: String) -> Result<Vec<json::Entry>> {
 fn get_effect(db: State<DbPool>, ids: String) -> Result<Vec<json::Effect>> {
     let ids = extract_ids(&ids);
     let effects = usecase::get_effects(&*db.get()?, &ids)?;
-    // This won't work but the underlying functions work with but
-    // do not require Entry types in their signatures ... try w/o
-    // functions adapted for Effect type
-    let tags = usecase::get_tags_by_entry_ids(&*db.get()?, &ids)?;
-    // is needed in scope
+    let tags = usecase::get_tags_by_effect_ids(&*db.get()?, &ids)?;
+    //our debugly
+    println!("tags in web::get_effect: {:?}", tags);
+    //our: might be needed in scope:
     let ratings = usecase::get_ratings_by_entry_ids(&*db.get()?, &ids)?;
     Ok(Json(effects
         .into_iter()
@@ -184,7 +183,7 @@ fn put_entry(db: State<DbPool>, id: String, e: Json<usecase::UpdateEntry>) -> Re
 fn put_effect(db: State<DbPool>, id: String, e: Json<usecase::UpdateEffect>) -> Result<String> {
     let e = e.into_inner();
     usecase::update_effect(&mut *db.get()?, e.clone())?;
-    // let email_addresses = usecase::email_addresses_to_notify(&e.lat, &e.lng, &mut *db.get()?);
+    //our: let email_addresses = usecase::email_addresses_to_notify(&e.lat, &e.lng, &mut *db.get()?);
     // let all_categories = db.get()?.all_categories()?;
     // notify_update_entry(email_addresses, &e, all_categories);
     Ok(Json(id))
@@ -194,7 +193,7 @@ fn put_effect(db: State<DbPool>, id: String, e: Json<usecase::UpdateEffect>) -> 
 fn post_effect(db: State<DbPool>, e: Json<usecase::NewEffect>) -> Result<String> {
     let e = e.into_inner();
     let id = usecase::create_new_effect(&mut *db.get()?, e.clone())?;
-    //let email_addresses = usecase::email_addresses_to_notify(&e.lat, &e.lng, &mut *db.get()?);
+    //our: let email_addresses = usecase::email_addresses_to_notify(&e.lat, &e.lng, &mut *db.get()?);
     //let all_categories = db.get()?.all_categories()?;
     //notify_create_entry(email_addresses, &e, &id, all_categories);
     Ok(Json(id))

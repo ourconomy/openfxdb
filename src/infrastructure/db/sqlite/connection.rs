@@ -21,6 +21,17 @@ fn unset_current_on_all_entries(
         .execute(*con)
 }
 
+fn unset_current_on_all_effects(
+    con: &&mut SqliteConnection,
+    id: &str,
+) -> result::Result<usize, diesel::result::Error> {
+    use self::schema::effects::dsl;
+    diesel::update(dsl::effects.filter(dsl::id.eq(id)).filter(
+        dsl::current.eq(true),
+    )).set(dsl::current.eq(false))
+        .execute(*con)
+}
+
 impl Db for SqliteConnection {
     fn create_entry(&mut self, e: &Entry) -> Result<()> {
         let new_entry = models::Entry::from(e.clone());
@@ -62,7 +73,7 @@ impl Db for SqliteConnection {
       //    })
       //    .collect();
         self.transaction::<_, diesel::result::Error, _>(|| {
-            //unset_current_on_all_entries(&self, &e.id)?;
+            unset_current_on_all_effects(&self, &e.id)?;
             diesel::insert_into(schema::effects::table)
                 .values(&new_effect)
                 .execute(self)?;
@@ -98,6 +109,25 @@ impl Db for SqliteConnection {
                                     .values(&models::EntryTagRelation {
                                         entry_id: e.id,
                                         entry_version: e.version as i32,
+                                        tag_id: t_id.clone(),
+                                    })
+                                    .execute(self)?;
+                                return Ok(());
+                            }
+                            _ => {}
+                        }
+                    }
+            // (effetc)-[is_tagged_with]->(tag)
+                    ObjectId::Effect(ref e_id) => { //our: effect tab req. 
+                        match t.object {
+                            ObjectId::Tag(ref t_id) => {
+                                let e = self.get_effect(e_id)?;
+                                //our check:
+                                println!("--> values in connections::create_triple: \n effect_id: {:?} \n effect_version: {:?} \n tag_id: {:?}", &e.id, *&e.version as i32, &t_id);
+                                diesel::insert_into(schema::effect_tag_relations::table)
+                                    .values(&models::EffectTagRelation {
+                                        effect_id: e.id,
+                                        effect_version: e.version as i32,
                                         tag_id: t_id.clone(),
                                     })
                                     .execute(self)?;
@@ -285,9 +315,11 @@ impl Db for SqliteConnection {
         })
     }
 
+
+
     fn get_effect(&self, e_id: &str) -> Result<Effect> {
         use self::schema::effects::dsl as e_dsl;
-        use self::schema::entry_category_relations::dsl as e_c_dsl;
+        //our: unused import: use self::schema::entry_category_relations::dsl as e_c_dsl;
 
         let models::Effect {
             id,
@@ -303,7 +335,7 @@ impl Db for SqliteConnection {
             .filter(e_dsl::current.eq(true))
             .first(self)?;
 
-        // currently unused?
+        //our: currently unused?
       //let categories = e_c_dsl::entry_category_relations
       //    .filter(e_c_dsl::entry_id.eq(&id))
       //    .load::<models::EntryCategoryRelation>(self)?
@@ -429,6 +461,7 @@ impl Db for SqliteConnection {
     }
     fn all_triples(&self) -> Result<Vec<Triple>> {
         use self::schema::entry_tag_relations::dsl as e_t_dsl;
+        use self::schema::effect_tag_relations::dsl as ef_t_dsl;
         use self::schema::ratings::dsl as r_dsl;
         use self::schema::comments::dsl as c_dsl;
         use self::schema::bbox_subscriptions::dsl as b_dsl;
@@ -436,6 +469,13 @@ impl Db for SqliteConnection {
         // (entry)-[is_tagged_with]->(tag)
         let mut e_t_triples: Vec<_> = e_t_dsl::entry_tag_relations
             .load::<models::EntryTagRelation>(self)?
+            .into_iter()
+            .map(Triple::from)
+            .collect();
+
+        // (effect)-[is_tagged_with]->(tag)
+        let mut ef_t_triples: Vec<_> = ef_t_dsl::effect_tag_relations
+            .load::<models::EffectTagRelation>(self)?
             .into_iter()
             .map(Triple::from)
             .collect();
@@ -464,6 +504,7 @@ impl Db for SqliteConnection {
 
         let mut result = vec![];
         result.append(&mut e_t_triples);
+        result.append(&mut ef_t_triples);
         result.append(&mut e_r_triples);
         result.append(&mut r_c_triples);
         result.append(&mut u_b_triples);
@@ -541,7 +582,7 @@ impl Db for SqliteConnection {
       //    .collect();
 
         self.transaction::<_, diesel::result::Error, _>(|| {
-        //    unset_current_on_all_entries(&self, &e.id)?;
+            unset_current_on_all_effects(&self, &e.id)?;
             diesel::insert_into(schema::effects::table)
                 .values(&e)
                 .execute(self)?;

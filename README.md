@@ -1,3 +1,21 @@
+# Open Fair DB with products/services
+
+This experimental fork of Open Fair DB can handle products and services (called 'effects' in the code). 
+It works as a backend for the [ourconomy version of Karte von morgen](https://github.com/ourconomy/kartevonmorgen) which itself extends the scope to products and services.
+
+From a technical point of view, everything that already existed for Entries has been implemented for Effects, too. 
+The 'tags' table -- as an exception to this rule -- is there for both the `entry_tag_relations` and the `effect_tag_relations`.
+
+The present version of Open Fair DB is work in progress. Todos:
+
+  * Clean up code and redundant comments
+  * Make effect result sorting and filtering work
+  * Implement ratings for effects
+  * Make tag deletion work
+  * ...
+
+This is the description of the original project:
+
 # Open Fair DB
 
 A micro backend for [Karte von morgen](https://github.com/flosse/kartevonmorgen/)
