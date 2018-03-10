@@ -5,6 +5,7 @@ use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use std::result;
 use business::db::Db;
+use business::db_f::Db;
 use super::models;
 use super::schema;
 

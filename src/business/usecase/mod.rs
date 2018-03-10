@@ -3,6 +3,7 @@ use std::result;
 use chrono::*;
 use entities::*;
 use super::db::Db;
+use super::db_f::Db; //needed for effects
 use super::filter;
 use super::validate::{self, Validate};
 use uuid::Uuid;
