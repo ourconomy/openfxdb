@@ -5,7 +5,7 @@ use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use std::result;
 use business::db::Db;
-use business::db_f::Db;
+//use business::dbfx::DbFX;
 use super::models;
 use super::schema;
 
@@ -60,32 +60,32 @@ impl Db for SqliteConnection {
         })?;
         Ok(())
     }
-    fn create_effect(&mut self, e: &Effect) -> Result<()> {
-        let new_effect= models::Effect::from(e.clone());
-      //let cat_rels: Vec<_> = e.categories
-      //    .iter()
-      //    .cloned()
-      //    .map(|category_id| {
-      //        models::EntryCategoryRelation {
-      //            entry_id: e.id.clone(),
-      //            entry_version: e.version as i32,
-      //            category_id,
-      //        }
-      //    })
-      //    .collect();
-        self.transaction::<_, diesel::result::Error, _>(|| {
-            unset_current_on_all_effects(&self, &e.id)?;
-            diesel::insert_into(schema::effects::table)
-                .values(&new_effect)
-                .execute(self)?;
-            //diesel::insert_into(schema::entry_category_relations::table)
-                //WHERE NOT EXISTS
-              //  .values(&cat_rels)
-              //  .execute(self)?;
-            Ok(())
-        })?;
-        Ok(())
-    }
+//  fn create_effect(&mut self, e: &Effect) -> Result<()> {
+//      let new_effect= models::Effect::from(e.clone());
+//    //let cat_rels: Vec<_> = e.categories
+//    //    .iter()
+//    //    .cloned()
+//    //    .map(|category_id| {
+//    //        models::EntryCategoryRelation {
+//    //            entry_id: e.id.clone(),
+//    //            entry_version: e.version as i32,
+//    //            category_id,
+//    //        }
+//    //    })
+//    //    .collect();
+//      self.transaction::<_, diesel::result::Error, _>(|| {
+//          unset_current_on_all_effects(&self, &e.id)?;
+//          diesel::insert_into(schema::effects::table)
+//              .values(&new_effect)
+//              .execute(self)?;
+//          //diesel::insert_into(schema::entry_category_relations::table)
+//              //WHERE NOT EXISTS
+//            //  .values(&cat_rels)
+//            //  .execute(self)?;
+//          Ok(())
+//      })?;
+//      Ok(())
+//  }
     fn create_tag(&mut self, t: &Tag) -> Result<()> {
         diesel::insert_into(schema::tags::table)
             .values(&models::Tag::from(t.clone()))
@@ -118,26 +118,26 @@ impl Db for SqliteConnection {
                             _ => {}
                         }
                     }
-            // (effetc)-[is_tagged_with]->(tag)
-                    ObjectId::Effect(ref e_id) => { //our: effect tab req. 
-                        match t.object {
-                            ObjectId::Tag(ref t_id) => {
-                                let e = self.get_effect(e_id)?;
-                                //our check:
-                                println!("--> values in connections::create_triple: \n effect_id: {:?} \n effect_version: {:?} \n tag_id: {:?}", &e.id, *&e.version as i32, &t_id);
-                                diesel::insert_into(schema::effect_tag_relations::table)
-                                    .values(&models::EffectTagRelation {
-                                        effect_id: e.id,
-                                        effect_version: e.version as i32,
-                                        tag_id: t_id.clone(),
-                                    })
-                                    .execute(self)?;
-                                return Ok(());
-                            }
-                            _ => {}
-                        }
-                    }
-                    _ => {}
+//          // (effetc)-[is_tagged_with]->(tag)
+//                  ObjectId::Effect(ref e_id) => { //our: effect tab req. 
+//                      match t.object {
+//                          ObjectId::Tag(ref t_id) => {
+//                              let e = self.get_effect(e_id)?;
+//                              //our check:
+//                              println!("--> values in connections::create_triple: \n effect_id: {:?} \n effect_version: {:?} \n tag_id: {:?}", &e.id, *&e.version as i32, &t_id);
+//                              diesel::insert_into(schema::effect_tag_relations::table)
+//                                  .values(&models::EffectTagRelation {
+//                                      effect_id: e.id,
+//                                      effect_version: e.version as i32,
+//                                      tag_id: t_id.clone(),
+//                                  })
+//                                  .execute(self)?;
+//                              return Ok(());
+//                          }
+//                          _ => {}
+//                      }
+//                  }
+//                  _ => {}
                 }
             }
 
@@ -197,7 +197,6 @@ impl Db for SqliteConnection {
         }
         warn!("did not save triple '{:?}'", t);
         Ok(())
-
     }
     fn create_user(&mut self, u: &User) -> Result<()> {
         diesel::insert_into(schema::users::table)
@@ -318,43 +317,43 @@ impl Db for SqliteConnection {
 
 
 
-    fn get_effect(&self, e_id: &str) -> Result<Effect> {
-        use self::schema::effects::dsl as e_dsl;
-        //our: unused import: use self::schema::entry_category_relations::dsl as e_c_dsl;
-
-        let models::Effect {
-            id,
-            created,
-            version,
-            title,
-            description,
-            origin,
-            license,
-            ..
-        } = e_dsl::effects
-            .filter(e_dsl::id.eq(e_id))
-            .filter(e_dsl::current.eq(true))
-            .first(self)?;
-
-        //our: currently unused?
-      //let categories = e_c_dsl::entry_category_relations
-      //    .filter(e_c_dsl::entry_id.eq(&id))
-      //    .load::<models::EntryCategoryRelation>(self)?
-      //    .into_iter()
-      //    .map(|r| r.category_id)
-      //    .collect();
-
-        Ok(Effect {
-            id,
-            created: created as u64,
-            version: version as u64,
-            title,
-            description,
-            origin,
-            //categories,
-            license,
-        })
-    }
+//  fn get_effect(&self, e_id: &str) -> Result<Effect> {
+//      use self::schema::effects::dsl as e_dsl;
+//      //our: unused import: use self::schema::entry_category_relations::dsl as e_c_dsl;
+//
+//      let models::Effect {
+//          id,
+//          created,
+//          version,
+//          title,
+//          description,
+//          origin,
+//          license,
+//          ..
+//      } = e_dsl::effects
+//          .filter(e_dsl::id.eq(e_id))
+//          .filter(e_dsl::current.eq(true))
+//          .first(self)?;
+//
+//      //our: currently unused?
+//    //let categories = e_c_dsl::entry_category_relations
+//    //    .filter(e_c_dsl::entry_id.eq(&id))
+//    //    .load::<models::EntryCategoryRelation>(self)?
+//    //    .into_iter()
+//    //    .map(|r| r.category_id)
+//    //    .collect();
+//
+//      Ok(Effect {
+//          id,
+//          created: created as u64,
+//          version: version as u64,
+//          title,
+//          description,
+//          origin,
+//          //categories,
+//          license,
+//      })
+//  }
 
     fn get_user(&self, user_id: &str) -> Result<User> {
         use self::schema::users::dsl::*;
@@ -405,41 +404,41 @@ impl Db for SqliteConnection {
                 .collect(),
         )
     }
-    fn all_effects(&self) -> Result<Vec<Effect>> {
-        use self::schema::effects::dsl as e_dsl;
-        //use self::schema::entry_category_relations::dsl as e_c_dsl;
-
-        let effects: Vec<models::Effect> =
-            e_dsl::effects.filter(e_dsl::current.eq(true)).load(self)?;
-
-        // If I understand correctly cat_rels are not used
-        //let cat_rels = e_c_dsl::entry_category_relations
-        //    .load::<models::EntryCategoryRelation>(self)?;
-
-        Ok(
-          effects
-              .into_iter()
-              .map(|e| {
-        //          let cats = cat_rels
-        //            .iter()
-        //            .filter(|r| r.entry_id == e.id)
-        //            .filter(|r| r.entry_version == e.version)
-        //            .map(|r| &r.category_id)
-        //            .cloned()
-        //            .collect();
-                    Effect {
-                        id: e.id,
-                        created: e.created as u64,
-                        version: e.version as u64,
-                        title: e.title,
-                        description: e.description,
-                        origin: e.origin,
-                        license: e.license,
-                    }
-                })
-                .collect(),
-        )
-    }
+//  fn all_effects(&self) -> Result<Vec<Effect>> {
+//      use self::schema::effects::dsl as e_dsl;
+//      //use self::schema::entry_category_relations::dsl as e_c_dsl;
+//
+//      let effects: Vec<models::Effect> =
+//          e_dsl::effects.filter(e_dsl::current.eq(true)).load(self)?;
+//
+//      // If I understand correctly cat_rels are not used
+//      //let cat_rels = e_c_dsl::entry_category_relations
+//      //    .load::<models::EntryCategoryRelation>(self)?;
+//
+//      Ok(
+//        effects
+//            .into_iter()
+//            .map(|e| {
+//      //          let cats = cat_rels
+//      //            .iter()
+//      //            .filter(|r| r.entry_id == e.id)
+//      //            .filter(|r| r.entry_version == e.version)
+//      //            .map(|r| &r.category_id)
+//      //            .cloned()
+//      //            .collect();
+//                  Effect {
+//                      id: e.id,
+//                      created: e.created as u64,
+//                      version: e.version as u64,
+//                      title: e.title,
+//                      description: e.description,
+//                      origin: e.origin,
+//                      license: e.license,
+//                  }
+//              })
+//              .collect(),
+//      )
+//  }
     fn all_categories(&self) -> Result<Vec<Category>> {
         use self::schema::categories::dsl::*;
         Ok(
@@ -565,36 +564,36 @@ impl Db for SqliteConnection {
     }
 
 
-    fn update_effect(&mut self, effect: &Effect) -> Result<()> {
-
-        let e = models::Effect::from(effect.clone());
-
-      //  let cat_rels: Vec<_> = effect
-      //    .categories
-      //    .iter()
-      //    .cloned()
-      //    .map(|category_id| {
-      //        models::EntryCategoryRelation {
-      //            entry_id: effect.id.clone(), //workaround
-      //            entry_version: effect.version as i32, //workaround
-      //            category_id,
-      //        }
-      //    })
-      //    .collect();
-
-        self.transaction::<_, diesel::result::Error, _>(|| {
-            unset_current_on_all_effects(&self, &e.id)?;
-            diesel::insert_into(schema::effects::table)
-                .values(&e)
-                .execute(self)?;
-        //    diesel::insert_into(schema::entry_category_relations::table)
-                //WHERE NOT EXISTS
-         //       .values(&cat_rels)
-           //     .execute(self)?;
-            Ok(())
-        })?;
-        Ok(())
-    }
+//  fn update_effect(&mut self, effect: &Effect) -> Result<()> {
+//
+//      let e = models::Effect::from(effect.clone());
+//
+//    //  let cat_rels: Vec<_> = effect
+//    //    .categories
+//    //    .iter()
+//    //    .cloned()
+//    //    .map(|category_id| {
+//    //        models::EntryCategoryRelation {
+//    //            entry_id: effect.id.clone(), //workaround
+//    //            entry_version: effect.version as i32, //workaround
+//    //            category_id,
+//    //        }
+//    //    })
+//    //    .collect();
+//
+//      self.transaction::<_, diesel::result::Error, _>(|| {
+//          unset_current_on_all_effects(&self, &e.id)?;
+//          diesel::insert_into(schema::effects::table)
+//              .values(&e)
+//              .execute(self)?;
+//      //    diesel::insert_into(schema::entry_category_relations::table)
+//              //WHERE NOT EXISTS
+//       //       .values(&cat_rels)
+//         //     .execute(self)?;
+//          Ok(())
+//      })?;
+//      Ok(())
+//  }
 
     fn delete_triple(&mut self, t: &Triple) -> Result<()> {
         use self::schema::entry_tag_relations::dsl as e_t_dsl;

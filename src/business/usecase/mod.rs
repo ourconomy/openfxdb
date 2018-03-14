@@ -3,7 +3,7 @@ use std::result;
 use chrono::*;
 use entities::*;
 use super::db::Db;
-use super::db_f::Db; //needed for effects
+use super::dbfx::DbFX; //needed for effects
 use super::filter;
 use super::validate::{self, Validate};
 use uuid::Uuid;
@@ -249,7 +249,7 @@ fn set_tag_relations<D: Db>(db: &mut D, entry: &str, tags: &[String]) -> Result<
     Ok(())
 }
 
-fn set_effect_tag_relations<D: Db>(db: &mut D, effect: &str, tags: &[String]) -> Result<()> {
+fn set_effect_tag_relations<D: DbFX>(db: &mut D, effect: &str, tags: &[String]) -> Result<()> {
     create_missing_tags(db, tags)?;
     let subject = ObjectId::Effect(effect.into());
     //our: debugly
@@ -271,10 +271,10 @@ fn set_effect_tag_relations<D: Db>(db: &mut D, effect: &str, tags: &[String]) ->
     let diff = get_triple_diff(&old_triples, &new_triples);
 
     for t in diff.new {
-        db.create_triple(&t)?;
+        db.create_effect_triple(&t)?;
     }
     for t in diff.deleted {
-        db.delete_triple(&t)?;
+        db.delete_effect_triple(&t)?;
     }
     Ok(())
 }
@@ -463,7 +463,7 @@ pub fn get_entries<D:Db>(db : &D, ids : &[String]) -> Result<Vec<Entry>> {
     Ok(entries)
 }
 
-pub fn get_effects<D:Db>(db : &D, ids : &[String]) -> Result<Vec<Effect>> {
+pub fn get_effects<D:DbFX>(db : &D, ids : &[String]) -> Result<Vec<Effect>> {
     let effects = db
         .all_effects()?
         .into_iter()
@@ -565,7 +565,7 @@ pub fn create_new_entry<D: Db>(db: &mut D, e: NewEntry) -> Result<String> {
     Ok(new_entry.id)
 }
 
-pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
+pub fn create_new_effect<D: DbFX>(db: &mut D, e: NewEffect) -> Result<String> {
     let new_effect = Effect{
         id          :  Uuid::new_v4().simple().to_string(),
         created     :  Utc::now().timestamp() as u64,
@@ -610,7 +610,7 @@ pub fn update_entry<D: Db>(db: &mut D, e: UpdateEntry) -> Result<()> {
     Ok(())
 }
 
-pub fn update_effect<D: Db>(db: &mut D, e: UpdateEffect) -> Result<()> {
+pub fn update_effect<D: DbFX>(db: &mut D, e: UpdateEffect) -> Result<()> {
     let old : Effect = db.get_effect(&e.id)?;
     if (old.version + 1) != e.version {
         return Err(Error::Repo(RepoError::InvalidVersion))
