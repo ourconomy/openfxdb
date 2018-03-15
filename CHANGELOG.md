@@ -1,3 +1,45 @@
+## v0.3.3 (2018-02-23)
+
+- fix(web): login with username instead of user id
+- fix(web): create new account
+
+## v0.3.2 (2018-02-12)
+
+- fix(web): ignore tag duplicates
+- fix(web): subscribe to bbox
+- fix(web): email-confirmation
+- fix(web): transform tags to lowercase
+- refactor(test): use sqlite instead of mock db
+
+## v0.3.1 (2018-01-21)
+
+- fix(db): add tag relations
+- fix(test): make coveralls on travis work
+
+## v0.3.0 (2018-01-19)
+
+- new(db): remove neo4j support (SQLite is now required)
+- new(db): add functionality to import OSM nodes
+- new(*): Improve sorting & search algorithms
+- refactor(db): freeze initial DB-Schema
+- refactor(*): remove tripples (make relations explicit)
+- refactor(*): tidy up & format code & rename some functions
+- chore(email): make email functionality optional
+- chore(web): update `rocket` to `v0.3.6`
+- chore(web): update `diesel` to `v1.1.1`
+- fix(*): use logging level from environment
+- fix(sort): don't overflow on calculating the average rating
+
+## v0.2.12 (2018-01-09)
+
+- fix(*): use logging level from the environment
+
+## v0.2.11 (2018-01-08)
+
+- new(search): improve performance
+- revert(db): use neo4j by default
+- chore(*): update `rocket` to `v0.3.5`
+
 ## v0.2.10 (2017-12-06)
 
 - new(db): use [SQLite](https://sqlite.org/) and [diesel](https://diesel.rs)

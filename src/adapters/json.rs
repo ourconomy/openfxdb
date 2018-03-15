@@ -1,5 +1,6 @@
 use entities as e;
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Serialize)]
 pub struct Entry {
     pub id          : String,
@@ -22,6 +23,7 @@ pub struct Entry {
     pub license     : Option<String>,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Serialize)]
 pub struct Effect {
     pub id          : String,
@@ -36,39 +38,53 @@ pub struct Effect {
     pub license     : Option<String>,
 }
 
-#[derive(Serialize,Deserialize)]
+#[cfg_attr(rustfmt, rustfmt_skip)]
+#[derive(Serialize, Deserialize)]
 pub struct Rating {
     pub id          : String,
     pub title       : String,
     pub created     : u64,
-    pub user        : Option<String>,
     pub value       : i8,
     pub context     : e::RatingContext,
     pub comments    : Vec<Comment>,
     pub source      : String
 }
 
-#[derive(Serialize,Deserialize)]
+#[cfg_attr(rustfmt, rustfmt_skip)]
+#[derive(Serialize, Deserialize)]
 pub struct Comment {
     pub id          : String,
     pub created     : u64,
     pub text        : String,
-    pub user        : Option<String>
 }
 
+//our:  pub struct SearchResult {
+//      pub visible   : Vec<String>,
+//      pub invisible : Vec<String>,
+//      pub effects   : Vec<String> 
+
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Serialize)]
-pub struct SearchResult {
-    pub visible   : Vec<String>,
-    pub invisible : Vec<String>,
-    pub effects   : Vec<String> 
+pub struct EntryIdWithCoordinates {
+    pub id : String,
+    pub lat: f64,
+    pub lng: f64,
+}
+
+#[cfg_attr(rustfmt, rustfmt_skip)]
+#[derive(Serialize)]
+pub struct SearchResponse {
+    pub visible   : Vec<EntryIdWithCoordinates>,
+    pub invisible : Vec<EntryIdWithCoordinates>
 }
 
 #[derive(Serialize)]
 pub struct User {
-    pub u_id: String,
-    pub email: String
+    pub username: String,
+    pub email: String,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Serialize)]
 pub struct BboxSubscription{
     pub id              : String,
@@ -80,8 +96,9 @@ pub struct BboxSubscription{
 
 // Entity -> JSON
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 impl Entry {
-    pub fn from_entry_with_tags_and_ratings(e: e::Entry, tags: Vec<e::Tag>, ratings: Vec<e::Rating>) -> Entry {
+    pub fn from_entry_with_ratings(e: e::Entry, ratings: Vec<e::Rating>) -> Entry {
         Entry{
             id          : e.id,
             created     : e.created,
@@ -98,7 +115,7 @@ impl Entry {
             telephone   : e.telephone,
             homepage    : e.homepage,
             categories  : e.categories,
-            tags        : tags.into_iter().map(|e|e.id).collect(),
+            tags        : e.tags,
             ratings     : ratings.into_iter().map(|r|r.id).collect(),
             license     : e.license,
         }

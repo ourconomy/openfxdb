@@ -4,13 +4,14 @@ use super::schema::*;
 #[table_name = "entries"]
 pub struct Entry {
     pub id: String,
-    pub created: i32,
-    pub version: i32,
+    pub osm_node: Option<i64>,
+    pub created: i64,
+    pub version: i64,
     pub current: bool,
     pub title: String,
     pub description: String,
-    pub lat: f32,
-    pub lng: f32,
+    pub lat: f64,
+    pub lng: f64,
     pub street: Option<String>,
     pub zip: Option<String>,
     pub city: Option<String>,
@@ -38,8 +39,8 @@ pub struct Effect {
 #[table_name = "categories"]
 pub struct Category {
     pub id: String,
-    pub created: i32,
-    pub version: i32,
+    pub created: i64,
+    pub version: i64,
     pub name: String,
 }
 
@@ -48,7 +49,7 @@ pub struct Category {
 #[primary_key(entry_id, entry_version, category_id)]
 pub struct EntryCategoryRelation {
     pub entry_id: String,
-    pub entry_version: i32,
+    pub entry_version: i64,
     pub category_id: String,
 }
 
@@ -57,7 +58,7 @@ pub struct EntryCategoryRelation {
 #[primary_key(entry_id, entry_version, tag_id)]
 pub struct EntryTagRelation {
     pub entry_id: String,
-    pub entry_version: i32,
+    pub entry_version: i64,
     pub tag_id: String,
 }
 
@@ -91,51 +92,32 @@ pub struct User {
 #[table_name = "comments"]
 pub struct Comment {
     pub id: String,
-    pub created: i32,
+    pub created: i64,
     pub text: String,
-    pub rating_id: Option<String>, //TODO remove option
+    pub rating_id: String,
 }
 
-#[derive(AsChangeset)]
-#[table_name = "comments"]
-#[changeset_options(treat_none_as_null = "true")]
-pub struct CommentUpdate {
-    pub rating_id: Option<String>, //TODO remove option
-}
-
-#[derive(Queryable, Insertable)]
+#[derive(Queryable, Insertable, Associations)]
 #[table_name = "ratings"]
+#[belongs_to(Entry, foreign_key = "entry_id")]
 pub struct Rating {
     pub id: String,
-    pub created: i32,
+    pub created: i64,
     pub title: String,
     pub value: i32,
     pub context: String,
     pub source: Option<String>,
-    pub entry_id: Option<String>, //TODO remove option
+    pub entry_id: String,
 }
 
-#[derive(AsChangeset)]
-#[table_name = "ratings"]
-#[changeset_options(treat_none_as_null = "true")]
-pub struct RatingUpdate {
-    pub entry_id: Option<String>, //TODO remove option
-}
-
-#[derive(Queryable, Insertable)]
+#[derive(Queryable, Insertable, Associations)]
 #[table_name = "bbox_subscriptions"]
+#[belongs_to(User, foreign_key = "username")]
 pub struct BboxSubscription {
     pub id: String,
-    pub south_west_lat: f32,
-    pub south_west_lng: f32,
-    pub north_east_lat: f32,
-    pub north_east_lng: f32,
-    pub user_id: Option<String>, //TODO remove option
-}
-
-#[derive(AsChangeset)]
-#[table_name = "bbox_subscriptions"]
-#[changeset_options(treat_none_as_null = "true")]
-pub struct BboxSubscriptionUpdate {
-    pub user_id: Option<String>, //TODO remove option
+    pub south_west_lat: f64,
+    pub south_west_lng: f64,
+    pub north_east_lat: f64,
+    pub north_east_lng: f64,
+    pub username: String,
 }

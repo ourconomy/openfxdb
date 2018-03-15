@@ -1,16 +1,21 @@
 use entities::*;
+use uuid::Uuid;
 
 pub trait EntryBuilder {
     fn build() -> EntryBuild;
 }
 
 pub struct EntryBuild {
-    entry: Entry
+    entry: Entry,
 }
 
 impl EntryBuild {
     pub fn id(mut self, id: &str) -> Self {
         self.entry.id = id.into();
+        self
+    }
+    pub fn version(mut self, v: u64) -> Self {
+        self.entry.version = v;
         self
     }
     pub fn title(mut self, title: &str) -> Self {
@@ -30,10 +35,11 @@ impl EntryBuild {
         self
     }
     pub fn categories(mut self, cats: Vec<&str>) -> Self {
-        self.entry.categories = cats
-            .into_iter()
-            .map(|x|x.into())
-            .collect();
+        self.entry.categories = cats.into_iter().map(|x| x.into()).collect();
+        self
+    }
+    pub fn tags(mut self, tags: Vec<&str>) -> Self {
+        self.entry.tags = tags.into_iter().map(|x| x.into()).collect();
         self
     }
     pub fn finish(self) -> Entry {
@@ -44,15 +50,17 @@ impl EntryBuild {
 impl EntryBuilder for Entry {
     fn build() -> EntryBuild {
         EntryBuild {
-            entry: Entry::default()
+            entry: Entry::default(),
         }
     }
 }
 
 impl Default for Entry {
     fn default() -> Entry {
+        #[cfg_attr(rustfmt, rustfmt_skip)]
         Entry{
-            id          : "".into(),
+            id          : Uuid::new_v4().simple().to_string(),
+            osm_node    : None,
             created     : 0,
             version     : 0,
             title       : "".into(),
@@ -67,6 +75,7 @@ impl Default for Entry {
             telephone   : None,
             homepage    : None,
             categories  : vec![],
+            tags        : vec![],
             license     : None,
         }
     }

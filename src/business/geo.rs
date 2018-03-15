@@ -1,5 +1,5 @@
 use business::error::ParameterError;
-use entities::{Coordinate, Bbox};
+use entities::{Bbox, Coordinate};
 
 // The Earth's radius in kilometers.
 static EARTH_RADIUS: f64 = 6371.0;
@@ -11,34 +11,35 @@ pub fn distance(a: &Coordinate, b: &Coordinate) -> f64 {
     let dlat = (b.lat - a.lat).to_radians();
     let dlng = (b.lng - a.lng).to_radians();
 
-    let a = (dlat / 2.0).sin() * (dlat / 2.0).sin() +
-            lat1.cos() * lat2.cos() * (dlng / 2.0).sin() * (dlng / 2.0).sin();
+    let a = (dlat / 2.0).sin() * (dlat / 2.0).sin()
+        + lat1.cos() * lat2.cos() * (dlng / 2.0).sin() * (dlng / 2.0).sin();
     let c = 2.0 * a.sqrt().atan2((1.0 - a).sqrt());
 
     EARTH_RADIUS * c
 }
 
-pub fn extract_bbox(s: &str) -> Result<Vec<Coordinate>, ParameterError> {
+pub fn extract_bbox(s: &str) -> Result<Bbox, ParameterError> {
     let c = s.split(',')
         .map(|x| x.parse::<f64>())
         .filter_map(|x| x.ok())
         .collect::<Vec<f64>>();
 
     match c.len() {
-        4 => {
-            Ok(vec![Coordinate {
-                        lat: c[0],
-                        lng: c[1],
-                    },
-                    Coordinate {
-                        lat: c[2],
-                        lng: c[3],
-                    }])
-        }
+        4 => Ok(Bbox {
+            south_west: Coordinate {
+                lat: c[0],
+                lng: c[1],
+            },
+            north_east: Coordinate {
+                lat: c[2],
+                lng: c[3],
+            },
+        }),
         _ => Err(ParameterError::Bbox),
     }
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 pub fn is_in_bbox(lat: &f64, lng: &f64, bbox: &Bbox) -> bool {
     *lat >= bbox.south_west.lat &&
     *lng >= bbox.south_west.lng &&
@@ -64,7 +65,6 @@ mod tests {
 
     #[test]
     fn real_distance() {
-
         // 48° 47′ N, 9° 11′ O
         let stuttgart = Coordinate {
             lat: 48.7755,
@@ -94,7 +94,7 @@ mod tests {
         assert_eq!(distance(&a, &b), distance(&b, &a));
     }
 
-    use std::f64::{NAN, INFINITY};
+    use std::f64::{INFINITY, NAN};
 
     #[test]
     fn distance_with_invalid_coordinates() {
@@ -124,11 +124,10 @@ mod tests {
         let bb = extract_bbox("0,10,20,30");
         assert!(bb.is_ok());
         let bb = bb.unwrap();
-        assert_eq!(bb.len(), 2);
-        assert_eq!(bb[0].lat, 0.0);
-        assert_eq!(bb[0].lng, 10.0);
-        assert_eq!(bb[1].lat, 20.0);
-        assert_eq!(bb[1].lng, 30.0);
+        assert_eq!(bb.south_west.lat, 0.0);
+        assert_eq!(bb.south_west.lng, 10.0);
+        assert_eq!(bb.north_east.lat, 20.0);
+        assert_eq!(bb.north_east.lng, 30.0);
     }
 
     #[test]
@@ -143,46 +142,40 @@ mod tests {
     }
 
     #[test]
-    fn test_is_in_bbox(){
-        let bbox1 = Bbox{
-            south_west: Coordinate{
-                lat: 0.0,
-                lng: 0.0
-            },
-            north_east: Coordinate{
+    fn test_is_in_bbox() {
+        let bbox1 = Bbox {
+            south_west: Coordinate { lat: 0.0, lng: 0.0 },
+            north_east: Coordinate {
                 lat: 10.0,
-                lng: 10.0
-            }
+                lng: 10.0,
+            },
         };
-        let bbox2 = Bbox{
-            south_west: Coordinate{
+        let bbox2 = Bbox {
+            south_west: Coordinate {
                 lat: -10.0,
-                lng: 0.0
+                lng: 0.0,
             },
-            north_east: Coordinate{
+            north_east: Coordinate {
                 lat: 0.0,
-                lng: 10.0
-            }
+                lng: 10.0,
+            },
         };
-        let bbox3 = Bbox{
-            south_west: Coordinate{
+        let bbox3 = Bbox {
+            south_west: Coordinate {
                 lat: -10.0,
-                lng: -10.0
+                lng: -10.0,
             },
-            north_east: Coordinate{
-                lat: 0.0,
-                lng: 0.0
-            }
+            north_east: Coordinate { lat: 0.0, lng: 0.0 },
         };
-        let bbox4 = Bbox{
-            south_west: Coordinate{
+        let bbox4 = Bbox {
+            south_west: Coordinate {
                 lat: 0.0,
-                lng: -10.0
+                lng: -10.0,
             },
-            north_east: Coordinate{
+            north_east: Coordinate {
                 lat: 10.0,
-                lng: 0.0
-            }
+                lng: 0.0,
+            },
         };
 
         let lat1 = 5.0;

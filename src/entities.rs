@@ -1,6 +1,8 @@
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Entry {
     pub id          : String,
+    pub osm_node    : Option<u64>,
     pub created     : u64,
     pub version     : u64,
     pub title       : String,
@@ -14,10 +16,12 @@ pub struct Entry {
     pub email       : Option<String>,
     pub telephone   : Option<String>,
     pub homepage    : Option<String>,
-    pub categories  : Vec<String>, // TODO: remove
+    pub categories  : Vec<String>,
+    pub tags        : Vec<String>,
     pub license     : Option<String>,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Effect {
     pub id          : String,
@@ -31,96 +35,80 @@ pub struct Effect {
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Category {
-    pub id        : String,
-    pub created   : u64,
-    pub version   : u64,
-    pub name      : String
+    pub id      : String,
+    pub created : u64,
+    pub version : u64,
+    pub name    : String
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Tag {
-    pub id : String,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
-pub enum Relation {
-    #[serde(rename="is_tagged_with")]
-    IsTaggedWith,
-    #[serde(rename="is_rated_with")]
-    IsRatedWith,
-    #[serde(rename="is_commented_with")]
-    IsCommentedWith,
-    #[serde(rename="created_by")]
-    CreatedBy,
-    #[serde(rename="subscribed_to")]
-    SubscribedTo
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
-pub struct Triple {
-    pub subject : ObjectId,
-    pub predicate : Relation,
-    pub object : ObjectId,
+    pub id: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub enum ObjectId {
-    #[serde(rename="entry")]
+    #[serde(rename = "entry")]
     Entry(String),
-    #[serde(rename="tag")]
+    #[serde(rename = "tag")]
     Tag(String),
-    #[serde(rename="user")]
+    #[serde(rename = "user")]
     User(String),
-    #[serde(rename="comment")]
+    #[serde(rename = "comment")]
     Comment(String),
-    #[serde(rename="rating")]
+    #[serde(rename = "rating")]
     Rating(String),
-    #[serde(rename="bbox_subscription")]
-    BboxSubscription(String),
     #[serde(rename="effect")]
-    Effect(String)
+    Effect(String),
+    #[serde(rename = "bbox_subscription")]
+    BboxSubscription(String),
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct User {
-    pub id: String, // TODO: remove
-    pub username: String,
-    pub password: String,
-    pub email: String,
-    pub email_confirmed: bool,
+    pub id              : String, // TODO: remove
+    pub username        : String,
+    pub password        : String,
+    pub email           : String,
+    pub email_confirmed : bool,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Comment {
-    pub id: String,
-    pub created: u64,
-    pub text: String
+    pub id        : String,
+    pub created   : u64,
+    pub text      : String,
+    pub rating_id : String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub enum RatingContext {
-   #[serde(rename="diversity")]
-   Diversity,
-   #[serde(rename="renewable")]
-   Renewable,
-   #[serde(rename="fairness")]
-   Fairness,
-   #[serde(rename="humanity")]
-   Humanity,
-   #[serde(rename="transparency")]
-   Transparency,
-   #[serde(rename="solidarity")]
-   Solidarity
+    #[serde(rename = "diversity")]
+    Diversity,
+    #[serde(rename = "renewable")]
+    Renewable,
+    #[serde(rename = "fairness")]
+    Fairness,
+    #[serde(rename = "humanity")]
+    Humanity,
+    #[serde(rename = "transparency")]
+    Transparency,
+    #[serde(rename = "solidarity")]
+    Solidarity,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Rating {
-    pub id: String,
-    pub created: u64,
-    pub title: String,
-    pub value: i8,
-    pub context: RatingContext,
-    pub source: Option<String>
+    pub id       : String,
+    pub entry_id : String,
+    pub created  : u64,
+    pub title    : String,
+    pub value    : i8,
+    pub context  : RatingContext,
+    pub source   : Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
@@ -132,14 +120,13 @@ pub struct Coordinate {
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Bbox {
     pub south_west: Coordinate,
-    pub north_east: Coordinate
+    pub north_east: Coordinate,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct BboxSubscription {
-    pub id: String,
-    pub south_west_lat: f64,
-    pub south_west_lng: f64,
-    pub north_east_lat: f64,
-    pub north_east_lng: f64,
+    pub id       : String,
+    pub bbox     : Bbox,
+    pub username : String,
 }

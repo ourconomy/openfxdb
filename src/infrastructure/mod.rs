@@ -1,5 +1,7 @@
-pub mod cli;
 mod error;
 mod db;
-mod web;
+pub mod web;
+mod osm;
+pub mod cli;
+#[cfg(feature = "email")]
 mod mail;

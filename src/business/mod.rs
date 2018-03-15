@@ -1,10 +1,10 @@
 pub mod error;
 pub mod filter;
+pub mod geo;
 pub mod duplicates;
 pub mod sort;
-pub mod geo;
+pub mod validate;
 pub mod db;
 pub mod usecase;
-pub mod validate;
 #[cfg(test)]
 pub mod builder;

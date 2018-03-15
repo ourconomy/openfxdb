@@ -6,6 +6,7 @@ impl From<e::Entry> for Entry {
     fn from(e: e::Entry) -> Entry {
         let e::Entry {
             id,
+            osm_node,
             created,
             version,
             title,
@@ -25,13 +26,14 @@ impl From<e::Entry> for Entry {
 
         Entry {
             id,
-            created: created as i32,
-            version: version as i32,
+            osm_node: osm_node.map(|x| x as i64),
+            created: created as i64,
+            version: version as i64,
             current: true,
             title,
             description,
-            lat: lat as f32,
-            lng: lng as f32,
+            lat,
+            lng,
             street,
             zip,
             city,
@@ -87,6 +89,23 @@ impl From<Category> for e::Category {
     }
 }
 
+impl From<e::Category> for Category {
+    fn from(c: e::Category) -> Category {
+        let e::Category {
+            id,
+            name,
+            created,
+            version,
+        } = c;
+        Category {
+            id,
+            name,
+            created: created as i64,
+            version: version as i64,
+        }
+    }
+}
+
 impl From<Tag> for e::Tag {
     fn from(t: Tag) -> e::Tag {
         e::Tag { id: t.id }
@@ -99,55 +118,7 @@ impl From<e::Tag> for Tag {
     }
 }
 
-impl From<EntryTagRelation> for e::Triple {
-    fn from(r: EntryTagRelation) -> e::Triple {
-        e::Triple {
-            subject: e::ObjectId::Entry(r.entry_id),
-            predicate: e::Relation::IsTaggedWith,
-            object: e::ObjectId::Tag(r.tag_id),
-        }
-    }
-}
-
-impl From<EffectTagRelation> for e::Triple {
-    fn from(r: EffectTagRelation) -> e::Triple {
-        e::Triple {
-            subject: e::ObjectId::Effect(r.effect_id),
-            predicate: e::Relation::IsTaggedWith,
-            object: e::ObjectId::Tag(r.tag_id),
-        }
-    }
-}
-
-impl From<Rating> for e::Triple {
-    fn from(r: Rating) -> e::Triple {
-        e::Triple {
-            subject: e::ObjectId::Entry(r.entry_id.unwrap()), //TODO
-            predicate: e::Relation::IsRatedWith,
-            object: e::ObjectId::Rating(r.id),
-        }
-    }
-}
-
-impl From<Comment> for e::Triple {
-    fn from(c: Comment) -> e::Triple {
-        e::Triple {
-            subject: e::ObjectId::Rating(c.rating_id.unwrap()), //TODO
-            predicate: e::Relation::IsCommentedWith,
-            object: e::ObjectId::Comment(c.id),
-        }
-    }
-}
-
-impl From<BboxSubscription> for e::Triple {
-    fn from(s: BboxSubscription) -> e::Triple {
-        e::Triple {
-            subject: e::ObjectId::User(s.user_id.unwrap()), //TODO
-            predicate: e::Relation::SubscribedTo,
-            object: e::ObjectId::BboxSubscription(s.id),
-        }
-    }
-}
+//our Effect_tag_relation were here
 
 impl From<User> for e::User {
     fn from(u: User) -> e::User {
@@ -189,23 +160,34 @@ impl From<e::User> for User {
 
 impl From<Comment> for e::Comment {
     fn from(c: Comment) -> e::Comment {
-        let Comment { id, created, text, .. } = c;
+        let Comment {
+            id,
+            created,
+            text,
+            rating_id,
+        } = c;
         e::Comment {
             id,
             created: created as u64,
             text,
+            rating_id,
         }
     }
 }
 
 impl From<e::Comment> for Comment {
     fn from(c: e::Comment) -> Comment {
-        let e::Comment { id, created, text } = c;
+        let e::Comment {
+            id,
+            created,
+            text,
+            rating_id,
+        } = c;
         Comment {
             id,
-            created: created as i32,
+            created: created as i64,
             text,
-            rating_id: None,
+            rating_id,
         }
     }
 }
@@ -214,15 +196,16 @@ impl From<Rating> for e::Rating {
     fn from(r: Rating) -> e::Rating {
         let Rating {
             id,
+            entry_id,
             created,
             title,
             context,
             value,
             source,
-            ..
         } = r;
         e::Rating {
             id,
+            entry_id,
             created: created as u64,
             title,
             value: value as i8,
@@ -241,15 +224,16 @@ impl From<e::Rating> for Rating {
             context,
             value,
             source,
+            entry_id,
         } = r;
         Rating {
             id,
-            created: created as i32,
+            created: created as i64,
             title,
-            value: value as i32,
+            value: i32::from(value),
             context: context.into(),
             source,
-            entry_id: None,
+            entry_id,
         }
     }
 }
@@ -262,38 +246,38 @@ impl From<BboxSubscription> for e::BboxSubscription {
             south_west_lng,
             north_east_lat,
             north_east_lng,
-            ..
+            username,
         } = s;
         e::BboxSubscription {
             id,
-            south_west_lat: south_west_lat as f64,
-            south_west_lng: south_west_lng as f64,
-            north_east_lat: north_east_lat as f64,
-            north_east_lng: north_east_lng as f64,
+            bbox: e::Bbox {
+                south_west: e::Coordinate {
+                    lat: south_west_lat as f64,
+                    lng: south_west_lng as f64,
+                },
+                north_east: e::Coordinate {
+                    lat: north_east_lat as f64,
+                    lng: north_east_lng as f64,
+                },
+            },
+            username,
         }
     }
 }
 
 impl From<e::BboxSubscription> for BboxSubscription {
     fn from(s: e::BboxSubscription) -> BboxSubscription {
-        let e::BboxSubscription {
-            id,
-            south_west_lat,
-            south_west_lng,
-            north_east_lat,
-            north_east_lng,
-        } = s;
+        let e::BboxSubscription { id, bbox, username } = s;
         BboxSubscription {
             id,
-            south_west_lat: south_west_lat as f32,
-            south_west_lng: south_west_lng as f32,
-            north_east_lat: north_east_lat as f32,
-            north_east_lng: north_east_lng as f32,
-            user_id: None,
+            south_west_lat: bbox.south_west.lat,
+            south_west_lng: bbox.south_west.lng,
+            north_east_lat: bbox.north_east.lat,
+            north_east_lng: bbox.north_east.lng,
+            username,
         }
     }
 }
-
 
 impl From<e::RatingContext> for String {
     fn from(context: e::RatingContext) -> String {
@@ -305,34 +289,6 @@ impl From<e::RatingContext> for String {
             e::RatingContext::Transparency => "transparency",
             e::RatingContext::Solidarity => "solidarity",
         }.into()
-    }
-}
-
-impl From<e::Relation> for String {
-    fn from(r: e::Relation) -> String {
-        match r {
-            e::Relation::IsTaggedWith => "is_tagged_with",
-            e::Relation::IsRatedWith => "is_rated_with",
-            e::Relation::IsCommentedWith => "is_commented_with",
-            e::Relation::CreatedBy => "created_by",
-            e::Relation::SubscribedTo => "subscribed_to",
-        }.into()
-    }
-}
-
-impl FromStr for e::Relation {
-    type Err = String;
-    fn from_str(predicate: &str) -> Result<e::Relation, String> {
-        Ok(match predicate {
-            "is_tagged_with" => e::Relation::IsTaggedWith,
-            "is_rated_with" => e::Relation::IsRatedWith,
-            "is_commented_with" => e::Relation::IsCommentedWith,
-            "created_by" => e::Relation::CreatedBy,
-            "subscribed_to" => e::Relation::SubscribedTo,
-            _ => {
-                return Err(format!("invalid Relation: '{}'", predicate));
-            }
-        })
     }
 }
 

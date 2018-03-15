@@ -23,7 +23,20 @@ written in [Rust](http://rustlang.org/).
 
 [![Build Status](https://travis-ci.org/flosse/openfairdb.svg?branch=master)](https://travis-ci.org/flosse/openfairdb)
 [![Coverage Status](https://coveralls.io/repos/github/flosse/openfairdb/badge.svg?branch=master)](https://coveralls.io/github/flosse/openfairdb?branch=master)
+[![dependency status](https://deps.rs/repo/github/flosse/openfairdb/status.svg)](https://deps.rs/repo/github/flosse/openfairdb)
 [![License](https://img.shields.io/badge/license-AGPLv3-blue.svg?style=flat)](https://github.com/flosse/openfairdb/blob/master/LICENSE)
+
+## Quick start
+
+Download the latest build
+[openfairdb-x86_64-linux-v0.3.2.tar.gz](https://github.com/flosse/openfairdb/releases/download/v0.3.2/openfairdb-x86_64-linux-v0.3.2.tar.gz),
+unpack and start it:
+
+    wget https://github.com/flosse/openfairdb/releases/download/v0.3.3/openfairdb-x86_64-linux-v0.3.3.tar.gz
+    tar xzf openfairdb-x86_64-linux-v0.3.3.tar.gz
+    ./openfairdb
+
+The API is now available at `http://127.0.0.1:676`.
 
 ## Build
 
@@ -41,6 +54,16 @@ sudo apt-get install curl libssl-dev gcc
 curl https://sh.rustup.rs -sSf | sh
 rustup install nightly
 rustup default nightly
+```
+
+On windows you can download the installer from [rustup.rs](https://rustup.rs).
+(But don't forget to install a
+[C++ toolchain](http://landinghub.visualstudio.com/visual-cpp-build-tools) first).
+
+Installing a specific nightly version with `rustup` (e.g. `2018-01-04`) is easy:
+
+```
+rustup default nightly-2018-01-04
 ```
 
 ### Installing SQLite & Diesel
@@ -155,6 +178,6 @@ that copies the DB file once a day.
 
 # License
 
-Copyright (c) 2015 - 2017 Markus Kohlhase
+Copyright (c) 2015 - 2018 Markus Kohlhase
 
 This project is licensed under the AGPLv3 license.

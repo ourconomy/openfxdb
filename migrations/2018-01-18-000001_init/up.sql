@@ -1,5 +1,6 @@
 CREATE TABLE entries (
     id          TEXT NOT NULL,
+    osm_node    INTEGER,
     created     INTEGER NOT NULL,
     version     INTEGER NOT NULL,
     current     BOOLEAN NOT NULL,
@@ -30,8 +31,8 @@ CREATE TABLE entry_category_relations (
     entry_version INTEGER NOT NULL,
     category_id   TEXT NOT NULL,
     PRIMARY KEY (entry_id, entry_version, category_id),
-    FOREIGN KEY (entry_id, entry_version) REFERENCES entries(id,version)
-    -- FOREIGN KEY (category_id) REFERENCES categories(id)
+    FOREIGN KEY (entry_id, entry_version) REFERENCES entries(id,version),
+    FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
 CREATE TABLE entry_tag_relations (
@@ -39,8 +40,8 @@ CREATE TABLE entry_tag_relations (
     entry_version INTEGER NOT NULL,
     tag_id        TEXT NOT NULL,
     PRIMARY KEY (entry_id, entry_version, tag_id),
-    FOREIGN KEY (entry_id, entry_version) REFERENCES entries(id,version)
-    -- FOREIGN KEY (tag_id) REFERENCES tags(id)
+    FOREIGN KEY (entry_id, entry_version) REFERENCES entries(id,version),
+    FOREIGN KEY (tag_id) REFERENCES tags(id)
 );
 
 CREATE TABLE tags (
@@ -51,8 +52,8 @@ CREATE TABLE comments (
   id        TEXT PRIMARY KEY NOT NULL,
   created   INTEGER NOT NULL,
   text      TEXT NOT NULL,
-  rating_id TEXT -- NOT NULL
-  -- FOREIGN KEY (rating_id) REFERENCES ratings(id)
+  rating_id TEXT NOT NULL,
+  FOREIGN KEY (rating_id) REFERENCES ratings(id)
 );
 
 CREATE TABLE ratings (
@@ -62,8 +63,7 @@ CREATE TABLE ratings (
     value   INTEGER NOT NULL,
     context TEXT NOT NULL,
     source  TEXT,
-    entry_id TEXT -- NOT NULL
-    -- FOREIGN KEY (entry_id) REFERENCES entries(id)
+    entry_id TEXT NOT NULL
 );
 
 CREATE TABLE bbox_subscriptions (
@@ -72,8 +72,8 @@ CREATE TABLE bbox_subscriptions (
     south_west_lng  FLOAT NOT NULL,
     north_east_lat  FLOAT NOT NULL,
     north_east_lng  FLOAT NOT NULL,
-    user_id TEXT -- NOT NULL
-    -- FOREIGN KEY (user_id) REFERENCES users(id)
+    username        TEXT  NOT NULL,
+    FOREIGN KEY (username) REFERENCES users(username)
 );
 
 CREATE TABLE users (
