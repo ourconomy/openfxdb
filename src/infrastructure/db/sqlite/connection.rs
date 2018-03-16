@@ -271,44 +271,44 @@ impl Db for SqliteConnection {
         })
     }
 
+//our: comment out because trait bound not satisfied
+//  fn get_effect(&self, e_id: &str) -> Result<Effect> {
+//      use self::schema::effects::dsl as e_dsl;
+//      //our: unused import: use self::schema::entry_category_relations::dsl as e_c_dsl;
 
-    fn get_effect(&self, e_id: &str) -> Result<Effect> {
-        use self::schema::effects::dsl as e_dsl;
-        //our: unused import: use self::schema::entry_category_relations::dsl as e_c_dsl;
+//      let models::Effect {
+//          id,
+//          created,
+//          version,
+//          title,
+//          description,
+//          origin,
+//          license,
+//          ..
+//      } = e_dsl::effects
+//          .filter(e_dsl::id.eq(e_id))
+//          .filter(e_dsl::current.eq(true))
+//          .first(self)?;
 
-        let models::Effect {
-            id,
-            created,
-            version,
-            title,
-            description,
-            origin,
-            license,
-            ..
-        } = e_dsl::effects
-            .filter(e_dsl::id.eq(e_id))
-            .filter(e_dsl::current.eq(true))
-            .first(self)?;
+//      //our: currently unused?
+//    //let categories = e_c_dsl::entry_category_relations
+//    //    .filter(e_c_dsl::entry_id.eq(&id))
+//    //    .load::<models::EntryCategoryRelation>(self)?
+//    //    .into_iter()
+//    //    .map(|r| r.category_id)
+//    //    .collect();
 
-        //our: currently unused?
-      //let categories = e_c_dsl::entry_category_relations
-      //    .filter(e_c_dsl::entry_id.eq(&id))
-      //    .load::<models::EntryCategoryRelation>(self)?
-      //    .into_iter()
-      //    .map(|r| r.category_id)
-      //    .collect();
-
-        Ok(Effect {
-            id,
-            created: created as u64,
-            version: version as u64,
-            title,
-            description,
-            origin,
-            //categories,
-            license,
-        })
-    }
+//      Ok(Effect {
+//          id,
+//          created: created as u64,
+//          version: version as u64,
+//          title,
+//          description,
+//          origin,
+//          //categories,
+//          license,
+//      })
+//  }
 
     fn get_entries_by_bbox(&self, bbox: &Bbox) -> Result<Vec<Entry>> {
         use self::schema::entries::dsl as e_dsl;
@@ -426,41 +426,42 @@ impl Db for SqliteConnection {
             })
             .collect())
     }
-    fn all_effects(&self) -> Result<Vec<Effect>> {
-        use self::schema::effects::dsl as e_dsl;
-        //use self::schema::entry_category_relations::dsl as e_c_dsl;
+//our: trait bound not satisfied for load self
+//  fn all_effects(&self) -> Result<Vec<Effect>> {
+//      use self::schema::effects::dsl as e_dsl;
+//      //use self::schema::entry_category_relations::dsl as e_c_dsl;
 
-        let effects: Vec<models::Effect> =
-            e_dsl::effects.filter(e_dsl::current.eq(true)).load(self)?;
+//      let effects: Vec<models::Effect> =
+//          e_dsl::effects.filter(e_dsl::current.eq(true)).load(self)?;
 
-        // If I understand correctly cat_rels are not used
-        //let cat_rels = e_c_dsl::entry_category_relations
-        //    .load::<models::EntryCategoryRelation>(self)?;
+//      // If I understand correctly cat_rels are not used
+//      //let cat_rels = e_c_dsl::entry_category_relations
+//      //    .load::<models::EntryCategoryRelation>(self)?;
 
-        Ok(
-          effects
-              .into_iter()
-              .map(|e| {
-        //          let cats = cat_rels
-        //            .iter()
-        //            .filter(|r| r.entry_id == e.id)
-        //            .filter(|r| r.entry_version == e.version)
-        //            .map(|r| &r.category_id)
-        //            .cloned()
-        //            .collect();
-                    Effect {
-                        id: e.id,
-                        created: e.created as u64,
-                        version: e.version as u64,
-                        title: e.title,
-                        description: e.description,
-                        origin: e.origin,
-                        license: e.license,
-                    }
-                })
-                .collect(),
-        )
-    }
+//      Ok(
+//        effects
+//            .into_iter()
+//            .map(|e| {
+//      //          let cats = cat_rels
+//      //            .iter()
+//      //            .filter(|r| r.entry_id == e.id)
+//      //            .filter(|r| r.entry_version == e.version)
+//      //            .map(|r| &r.category_id)
+//      //            .cloned()
+//      //            .collect();
+//                  Effect {
+//                      id: e.id,
+//                      created: e.created as u64,
+//                      version: e.version as u64,
+//                      title: e.title,
+//                      description: e.description,
+//                      origin: e.origin,
+//                      license: e.license,
+//                  }
+//              })
+//              .collect(),
+//      )
+//  }
     fn all_categories(&self) -> Result<Vec<Category>> {
         use self::schema::categories::dsl::*;
         Ok(categories

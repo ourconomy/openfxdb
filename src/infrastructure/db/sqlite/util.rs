@@ -61,8 +61,8 @@ impl From<e::Effect> for Effect {
 
         Effect {
             id,
-            created: created as i32,
-            version: version as i32,
+            created: created as i64,
+            version: version as i64,
             current: true,
             title,
             description,

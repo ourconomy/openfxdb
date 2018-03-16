@@ -8,6 +8,13 @@ use std::result;
 use diesel::r2d2::{self, Pool};
 use std::collections::HashMap;
 use std::sync::Mutex;
+//our: re-introduced after merge
+use adapters::json;
+use business::usecase;
+//new:
+use self::sqlite::DbConn;
+use infrastructure::web::util::extract_ids;
+// end
 
 #[cfg(feature = "email")]
 use super::mail;
@@ -28,46 +35,46 @@ use self::sqlite::create_connection_pool;
 
 type Result<T> = result::Result<Json<T>, AppError>;
 
+//our: method get not found for DbConn --> check later
+//  #[get("/effects/<ids>")]
+//  fn get_effect(db: DbConn, ids: String) -> Result<Vec<json::Effect>> {
+//      let ids = extract_ids(&ids);
+//      let effects = usecase::get_effects(&*db.get()?, &ids)?;
+//      //our deleted fn: let tags = usecase::get_tags_by_effect_ids(&*db.get()?, &ids)?;
+//      //our debugly
+//      //our deactivate: println!("tags in web::get_effect: {:?}", tags);
+//      //our: might be needed in scope:
+//      let ratings = usecase::get_ratings_by_entry_ids(&*db.get()?, &ids)?;
+//      Ok(Json(effects
+//          .into_iter()
+//          .map(|e|{
+//              //our out: let t = tags.get(&e.id).cloned().unwrap_or_else(|| vec![]);
+//              let r = ratings.get(&e.id).cloned().unwrap_or_else(|| vec![]);
+//              json::Effect::from_effect_with_tags_and_ratings(e,r) //our t out 
+//          })
+//          .collect::<Vec<json::Effect>>()))
+//  }
 
-#[get("/effects/<ids>")]
-fn get_effect(db: State<DbPool>, ids: String) -> Result<Vec<json::Effect>> {
-    let ids = extract_ids(&ids);
-    let effects = usecase::get_effects(&*db.get()?, &ids)?;
-    let tags = usecase::get_tags_by_effect_ids(&*db.get()?, &ids)?;
-    //our debugly
-    println!("tags in web::get_effect: {:?}", tags);
-    //our: might be needed in scope:
-    let ratings = usecase::get_ratings_by_entry_ids(&*db.get()?, &ids)?;
-    Ok(Json(effects
-        .into_iter()
-        .map(|e|{
-            let t = tags.get(&e.id).cloned().unwrap_or_else(|| vec![]);
-            let r = ratings.get(&e.id).cloned().unwrap_or_else(|| vec![]);
-            json::Effect::from_effect_with_tags_and_ratings(e,t,r) 
-        })
-        .collect::<Vec<json::Effect>>()))
-}
 
+//  #[put("/effects/<id>", format = "application/json", data = "<e>")]
+//  fn put_effect(db: DbConn, id: String, e: Json<usecase::UpdateEffect>) -> Result<String> {
+//      let e = e.into_inner();
+//      usecase::update_effect(&mut *db.get()?, e.clone())?;
+//      //our: let email_addresses = usecase::email_addresses_to_notify(&e.lat, &e.lng, &mut *db.get()?);
+//      // let all_categories = db.get()?.all_categories()?;
+//      // notify_update_entry(email_addresses, &e, all_categories);
+//      Ok(Json(id))
+//  }
 
-#[put("/effects/<id>", format = "application/json", data = "<e>")]
-fn put_effect(db: State<DbPool>, id: String, e: Json<usecase::UpdateEffect>) -> Result<String> {
-    let e = e.into_inner();
-    usecase::update_effect(&mut *db.get()?, e.clone())?;
-    //our: let email_addresses = usecase::email_addresses_to_notify(&e.lat, &e.lng, &mut *db.get()?);
-    // let all_categories = db.get()?.all_categories()?;
-    // notify_update_entry(email_addresses, &e, all_categories);
-    Ok(Json(id))
-}
-
-#[post("/effects", format = "application/json", data = "<e>")]
-fn post_effect(db: State<DbPool>, e: Json<usecase::NewEffect>) -> Result<String> {
-    let e = e.into_inner();
-    let id = usecase::create_new_effect(&mut *db.get()?, e.clone())?;
-    //our: let email_addresses = usecase::email_addresses_to_notify(&e.lat, &e.lng, &mut *db.get()?);
-    //let all_categories = db.get()?.all_categories()?;
-    //notify_create_entry(email_addresses, &e, &id, all_categories);
-    Ok(Json(id))
-}
+//  #[post("/effects", format = "application/json", data = "<e>")]
+//  fn post_effect(db: DbConn, e: Json<usecase::NewEffect>) -> Result<String> {
+//      let e = e.into_inner();
+//      let id = usecase::create_new_effect(&mut *db.get()?, e.clone())?;
+//      //our: let email_addresses = usecase::email_addresses_to_notify(&e.lat, &e.lng, &mut *db.get()?);
+//      //let all_categories = db.get()?.all_categories()?;
+//      //notify_create_entry(email_addresses, &e, &id, all_categories);
+//      Ok(Json(id))
+//  }
 
 
 //our: old search api, keep as documentation for now

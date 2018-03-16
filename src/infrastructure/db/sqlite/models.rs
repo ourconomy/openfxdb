@@ -26,8 +26,8 @@ pub struct Entry {
 #[table_name = "effects"]
 pub struct Effect {
     pub id: String,
-    pub created: i32,
-    pub version: i32,
+    pub created: i64,
+    pub version: i64,
     pub current: bool,
     pub title: String,
     pub description: String,
@@ -67,7 +67,7 @@ pub struct EntryTagRelation {
 #[primary_key(effect_id, effect_version, tag_id)]
 pub struct EffectTagRelation {
     pub effect_id: String,
-    pub effect_version: i32,
+    pub effect_version: i64,
     pub tag_id: String,
 }
 

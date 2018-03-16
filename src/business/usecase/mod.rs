@@ -226,14 +226,14 @@ pub fn get_entries<D: Db>(db: &D, ids: &[String]) -> Result<Vec<Entry>> {
     Ok(entries)
 }
 
-pub fn get_effects<D:Db>(db : &D, ids : &[String]) -> Result<Vec<Effect>> {
-    let effects = db
-        .all_effects()?
-        .into_iter()
-        .filter(|e| ids.iter().any(|id| *id == e.id))
-        .collect();
-    Ok(effects)
-}
+//  pub fn get_effects<D:Db>(db : &D, ids : &[String]) -> Result<Vec<Effect>> {
+//      let effects = db
+//          .all_effects()?
+//          .into_iter()
+//          .filter(|e| ids.iter().any(|id| *id == e.id))
+//          .collect();
+//      Ok(effects)
+//  }
 
 pub fn create_new_user<D: Db>(db: &mut D, u: NewUser) -> Result<()> {
     validate::username(&u.username)?;
@@ -339,7 +339,7 @@ pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
     //our: we don't need to val homepage and email yet:
     // new_effect.validate()?;
     db.create_effect(&new_effect)?;
-    set_effect_tag_relations(db, &new_effect.id, &e.tags)?;
+    //our: deactivate until exists again: set_effect_tag_relations(db, &new_effect.id, &e.tags)?;
     Ok(new_effect.id)
 }
 
@@ -378,25 +378,25 @@ pub fn update_entry<D: Db>(db: &mut D, e: UpdateEntry) -> Result<()> {
     Ok(())
 }
 
-pub fn update_effect<D: Db>(db: &mut D, e: UpdateEffect) -> Result<()> {
-    let old : Effect = db.get_effect(&e.id)?;
-    if (old.version + 1) != e.version {
-        return Err(Error::Repo(RepoError::InvalidVersion))
-    }
-    let new_effect = Effect{
-        id          :  e.id,
-        created     :  Utc::now().timestamp() as u64,
-        version     :  e.version,
-        title       :  e.title,
-        description :  e.description,
-        origin      :  e.origin,
-        license     :  old.license
-    };
-    db.update_effect(&new_effect)?;
-    //our: Changed here too:
-    set_effect_tag_relations(db, &new_effect.id, &e.tags)?;
-    Ok(())
-}
+//  pub fn update_effect<D: Db>(db: &mut D, e: UpdateEffect) -> Result<()> {
+//      let old : Effect = db.get_effect(&e.id)?;
+//      if (old.version + 1) != e.version {
+//          return Err(Error::Repo(RepoError::InvalidVersion))
+//      }
+//      let new_effect = Effect{
+//          id          :  e.id,
+//          created     :  Utc::now().timestamp() as u64,
+//          version     :  e.version,
+//          title       :  e.title,
+//          description :  e.description,
+//          origin      :  e.origin,
+//          license     :  old.license
+//      };
+//      db.update_effect(&new_effect)?;
+//      //our: Changed here too:
+//      //our deactivated: set_effect_tag_relations(db, &new_effect.id, &e.tags)?;
+//      Ok(())
+//  }
 
 pub fn rate_entry<D: Db>(db: &mut D, r: RateEntry) -> Result<()> {
     let e = db.get_entry(&r.entry)?;
