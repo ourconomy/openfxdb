@@ -49,21 +49,6 @@ table! {
     }
 }
 
-//our
-table! {
-    effects (id, version) {
-        id -> Text,
-        created -> BigInt,
-        version -> BigInt,
-        current -> Bool,
-        title -> Text,
-        description -> Text,
-        origin -> Nullable<Text>,
-        homepage -> Nullable<Text>,
-        license -> Nullable<Text>,
-    }
-}
-
 table! {
     entry_category_relations (entry_id, entry_version, category_id) {
         entry_id -> Text,
@@ -76,15 +61,6 @@ table! {
     entry_tag_relations (entry_id, entry_version, tag_id) {
         entry_id -> Text,
         entry_version -> BigInt,
-        tag_id -> Text,
-    }
-}
-
-//our
-table! {
-    effect_tag_relations (effect_id, effect_version, tag_id) {
-        effect_id -> Text,
-        effect_version -> BigInt,
         tag_id -> Text,
     }
 }
@@ -134,3 +110,29 @@ allow_tables_to_appear_in_same_query!(
     tags,
     users,
 );
+
+//our section
+
+table! {
+    effects (id, version) {
+        id -> Text,
+        created -> BigInt,
+        version -> BigInt,
+        current -> Bool,
+        title -> Text,
+        description -> Text,
+        origin -> Nullable<Text>,
+        homepage -> Nullable<Text>,
+        license -> Nullable<Text>,
+    }
+}
+
+
+table! {
+    effect_tag_relations (effect_id, effect_version, tag_id) {
+        effect_id -> Text,
+        effect_version -> BigInt,
+        tag_id -> Text,
+    }
+}
+//end
