@@ -30,6 +30,7 @@ pub struct Effect {
     pub title       : String,
     pub description : String,
     pub origin	    : Option<String>,
+    pub tags        : Vec<String>,
     pub license     : Option<String>,
 }
 

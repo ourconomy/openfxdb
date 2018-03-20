@@ -56,6 +56,7 @@ pub fn routes() -> Vec<Route> {
         unsubscribe_all_bboxes,
         get_entry,
         post_entry,
+        post_effect, //our addition
         post_user,
         post_rating,
         put_entry,
@@ -385,6 +386,19 @@ impl<'r> Responder<'r> for AppError {
         Err(Status::InternalServerError)
     }
 }
+
+//our section
+#[post("/effects", format = "application/json", data = "<e>")]
+fn post_effect(mut db: DbConn, e: Json<usecase::NewEffect>) -> Result<String> {
+    let e = e.into_inner();
+    let id = usecase::create_new_effect(&mut *db, e.clone())?;
+    //our clean up
+    //let email_addresses = usecase::email_addresses_by_coordinate(&mut *db, &e.lat, &e.lng)?;
+    //let all_categories = db.all_categories()?;
+    //util::notify_create_entry(&email_addresses, &e, &id, all_categories);
+    Ok(Json(id))
+}
+//end
 
 #[cfg(test)]
 mod tests {

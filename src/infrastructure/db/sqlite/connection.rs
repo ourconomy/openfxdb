@@ -76,26 +76,24 @@ impl Db for SqliteConnection {
     
     fn create_effect(&mut self, e: &Effect) -> Result<()> {
         let new_effect= models::Effect::from(e.clone());
-      //let cat_rels: Vec<_> = e.categories
-      //    .iter()
-      //    .cloned()
-      //    .map(|category_id| {
-      //        models::EntryCategoryRelation {
-      //            entry_id: e.id.clone(),
-      //            entry_version: e.version as i32,
-      //            category_id,
-      //        }
-      //    })
-      //    .collect();
+        let tag_rels: Vec<_> = e.tags
+            .iter()
+            .cloned()
+            .map(|tag_id| models::EffectTagRelation {
+                effect_id: e.id.clone(),
+                effect_version: e.version as i64,
+                tag_id,
+            })
+            .collect();
         self.transaction::<_, diesel::result::Error, _>(|| {
             unset_current_on_all_effects(&self, &e.id)?;
             diesel::insert_into(schema::effects::table)
                 .values(&new_effect)
                 .execute(self)?;
-            //diesel::insert_into(schema::entry_category_relations::table)
+            diesel::insert_into(schema::effect_tag_relations::table)
                 //WHERE NOT EXISTS
-              //  .values(&cat_rels)
-              //  .execute(self)?;
+                .values(&tag_rels)
+                .execute(self)?;
             Ok(())
         })?;
         Ok(())
@@ -541,19 +539,6 @@ impl Db for SqliteConnection {
     fn update_effect(&mut self, effect: &Effect) -> Result<()> {
 
         let e = models::Effect::from(effect.clone());
-
-      //  let cat_rels: Vec<_> = effect
-      //    .categories
-      //    .iter()
-      //    .cloned()
-      //    .map(|category_id| {
-      //        models::EntryCategoryRelation {
-      //            entry_id: effect.id.clone(), //workaround
-      //            entry_version: effect.version as i32, //workaround
-      //            category_id,
-      //        }
-      //    })
-      //    .collect();
 
         self.transaction::<_, diesel::result::Error, _>(|| {
             unset_current_on_all_effects(&self, &e.id)?;

@@ -327,6 +327,10 @@ pub fn create_new_entry<D: Db>(db: &mut D, e: NewEntry) -> Result<String> {
 }
 
 pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
+    let mut tags: Vec<_> = e.tags.into_iter().map(|t| t.replace("#", "")).collect();
+    tags.dedup();
+
+    #[cfg_attr(rustfmt, rustfmt_skip)]
     let new_effect = Effect{
         id          :  Uuid::new_v4().simple().to_string(),
         created     :  Utc::now().timestamp() as u64,
@@ -334,10 +338,14 @@ pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
         title       :  e.title,
         description :  e.description,
         origin      :  e.origin,
+        tags,
         license     :  Some(e.license)
     };
     //our: we don't need to val homepage and email yet:
     // new_effect.validate()?;
+    for t in &new_effect.tags {
+        db.create_tag_if_it_does_not_exist(&Tag { id: t.clone() })?;
+    }
     db.create_effect(&new_effect)?;
     //our: deactivate until exists again: set_effect_tag_relations(db, &new_effect.id, &e.tags)?;
     Ok(new_effect.id)

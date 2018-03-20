@@ -190,6 +190,7 @@ where
     calculate_all_ratings(&*pool.get().unwrap()).unwrap();
     rocket::custom(cfg, true)
         .manage(pool)
+//our: clean up
 //      .mount("/",
 //             routes![login,
 //                     get_effect,
