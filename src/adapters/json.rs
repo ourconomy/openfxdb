@@ -75,7 +75,8 @@ pub struct EntryIdWithCoordinates {
 #[derive(Serialize)]
 pub struct SearchResponse {
     pub visible   : Vec<EntryIdWithCoordinates>,
-    pub invisible : Vec<EntryIdWithCoordinates>
+    pub invisible : Vec<EntryIdWithCoordinates>,
+    pub effects   : Vec<String> //oc line
 }
 
 #[derive(Serialize)]

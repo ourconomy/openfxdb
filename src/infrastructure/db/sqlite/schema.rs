@@ -93,24 +93,6 @@ table! {
     }
 }
 
-joinable!(bbox_subscriptions -> users (username));
-joinable!(comments -> ratings (rating_id));
-joinable!(entry_category_relations -> categories (category_id));
-joinable!(entry_tag_relations -> tags (tag_id));
-
-allow_tables_to_appear_in_same_query!(
-    bbox_subscriptions,
-    categories,
-    comments,
-    entries,
-    effects,
-    entry_category_relations,
-    entry_tag_relations,
-    ratings,
-    tags,
-    users,
-);
-
 //our section
 
 table! {
@@ -136,3 +118,23 @@ table! {
     }
 }
 //end
+
+joinable!(bbox_subscriptions -> users (username));
+joinable!(comments -> ratings (rating_id));
+joinable!(entry_category_relations -> categories (category_id));
+joinable!(entry_tag_relations -> tags (tag_id));
+joinable!(effect_tag_relations -> tags (tag_id)); //oc line
+
+allow_tables_to_appear_in_same_query!(
+    bbox_subscriptions,
+    categories,
+    comments,
+    entries,
+    effects, //oc
+    entry_category_relations,
+    entry_tag_relations,
+    effect_tag_relations, //oc
+    ratings,
+    tags,
+    users,
+);

@@ -48,6 +48,24 @@ fn to_words(txt: &str) -> Vec<String> {
         .collect()
 }
 
+//oc section
+pub fn effects_by_search_text<'a>(
+    text: &'a str,
+) -> Box<Fn(&Effect) -> bool + 'a> {
+    let words = to_words(text);
+
+    //return Effects in the descr, tags, and title of which one word of search term occurs
+//  if !text.is_empty() {    oc: not needed
+    Box::new(move |effect| {
+        words.iter().any(|word| {
+            effect.title.to_lowercase().contains(word)
+                || effect.description.to_lowercase().contains(word)
+                    || effect.tags.iter().any(|t| *&t == word)
+        })
+    })
+}
+// end
+
 #[cfg(test)]
 mod tests {
 

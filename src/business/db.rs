@@ -34,7 +34,7 @@ pub trait Db {
     fn all_comments(&self) -> Result<Vec<Comment>>;
     fn all_users(&self) -> Result<Vec<User>>;
     fn all_bbox_subscriptions(&self) -> Result<Vec<BboxSubscription>>;
-//our: taken out because of trait buond not s.    fn all_effects(&self) -> Result<Vec<Effect>>;
+    fn all_effects(&self) -> Result<Vec<Effect>>; //our
 
     fn update_entry(&mut self, &Entry) -> Result<()>;
     fn update_effect(&mut self, &Effect) -> Result<()>; //our added

@@ -55,6 +55,7 @@ impl From<e::Effect> for Effect {
             title,
             description,
             origin,
+            homepage,
             license,
             ..
         } = e;
@@ -67,6 +68,7 @@ impl From<e::Effect> for Effect {
             title,
             description,
             origin,
+            homepage,
             license,
         }
     }

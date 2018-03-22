@@ -94,6 +94,7 @@ pub struct NewEffect {
     pub title       : String,
     pub description : String,
     pub origin      : Option<String>,
+    pub homepage    : Option<String>,
     pub tags        : Vec<String>,
     pub license     : String,
 }
@@ -338,6 +339,7 @@ pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
         title       :  e.title,
         description :  e.description,
         origin      :  e.origin,
+        homepage    :  e.homepage,
         tags,
         license     :  Some(e.license)
     };
@@ -531,7 +533,7 @@ fn extend_bbox(bbox: &Bbox) -> Bbox {
     extended_bbox
 }
 
-pub fn search<D: Db>(db: &D, req: &SearchRequest) -> Result<(Vec<Entry>, Vec<Entry>)> {
+pub fn search<D: Db>(db: &D, req: &SearchRequest) -> Result<(Vec<Entry>, Vec<Entry>, Vec<Effect>)> {
     let mut entries = if req.text.is_empty() && req.tags.is_empty() {
         let extended_bbox = extend_bbox(&req.bbox);
         db.get_entries_by_bbox(&extended_bbox)?
@@ -568,5 +570,19 @@ pub fn search<D: Db>(db: &D, req: &SearchRequest) -> Result<(Vec<Entry>, Vec<Ent
         .take(MAX_INVISIBLE_RESULTS)
         .collect();
 
-    Ok((visible_results, invisible_results))
+//oc section
+    let mut effects = db.all_effects()?;
+
+    let mut effects: Vec<_> = effects
+        .into_iter()
+        .filter(&*filter::effects_by_search_text(
+            &req.text,
+            //our &req.tags,   convert into one search text
+        ))
+        .collect();
+
+    let effect_results = effects; 
+//end
+
+    Ok((visible_results, invisible_results, effect_results))
 }

@@ -96,6 +96,7 @@ fn get_search(db: DbConn, search: SearchQuery) -> Result<json::SearchResponse> {
         }
     }
 
+    //oc comment: remove all tags starting with # from text
     let text = match search.text {
         Some(txt) => util::remove_hash_tags(&txt),
         None => "".into(),
@@ -113,8 +114,9 @@ fn get_search(db: DbConn, search: SearchQuery) -> Result<json::SearchResponse> {
         tags,
         entry_ratings: &*avg_ratings,
     };
-
-    let (visible, invisible) = usecase::search(&*db, &req)?;
+    
+    //oc enhanced line
+    let (visible, invisible, effects) = usecase::search(&*db, &req)?;
 
     let visible = visible
         .into_iter()
@@ -133,8 +135,17 @@ fn get_search(db: DbConn, search: SearchQuery) -> Result<json::SearchResponse> {
             lng: e.lng,
         })
         .collect();
+   
+    //oc section
+    let effects = effects
+        .iter()
+        .map(|x| &x.id)
+        .cloned()
+        .collect::<Vec<_>>();
+    //end
 
-    Ok(Json(json::SearchResponse { visible, invisible }))
+    //oc enhanced line
+    Ok(Json(json::SearchResponse { visible, invisible, effects }))
 }
 
 #[derive(Deserialize, Debug, Clone)]
