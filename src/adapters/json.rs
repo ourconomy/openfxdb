@@ -33,6 +33,7 @@ pub struct Effect {
     pub description : String,
     pub origin      : Option<String>,
     // pub categories  : Vec<String>,
+    pub homepage    : Option<String>,
     pub tags        : Vec<String>,
     pub ratings     : Vec<String>,
     pub license     : Option<String>,
@@ -123,8 +124,9 @@ impl Entry {
     }
 }
 
+//oc section
 impl Effect {
-    pub fn from_effect_with_tags_and_ratings(e: e::Effect, tags: Vec<e::Tag>, ratings: Vec<e::Rating>) -> Effect {
+    pub fn from_effect_with_ratings(e: e::Effect, ratings: Vec<e::Rating>) -> Effect {
         Effect{
             id          : e.id,
             created     : e.created,
@@ -133,9 +135,11 @@ impl Effect {
             description : e.description,
             origin      : e.origin,
             // useless? categories  : e.categories,
-            tags        : tags.into_iter().map(|e|e.id).collect(),
+            homepage    : e.homepage,
+            tags        : e.tags,
             ratings     : ratings.into_iter().map(|r|r.id).collect(),
             license     : e.license,
         }
     }
 }
+//end

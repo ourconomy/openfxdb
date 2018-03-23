@@ -227,14 +227,15 @@ pub fn get_entries<D: Db>(db: &D, ids: &[String]) -> Result<Vec<Entry>> {
     Ok(entries)
 }
 
-//  pub fn get_effects<D:Db>(db : &D, ids : &[String]) -> Result<Vec<Effect>> {
-//      let effects = db
-//          .all_effects()?
-//          .into_iter()
-//          .filter(|e| ids.iter().any(|id| *id == e.id))
-//          .collect();
-//      Ok(effects)
-//  }
+//oc section
+pub fn get_effects<D:Db>(db : &D, ids : &[String]) -> Result<Vec<Effect>> {
+    let effects = db.all_effects()?
+        .into_iter()
+        .filter(|e| ids.iter().any(|id| *id == e.id))
+        .collect();
+    Ok(effects)
+}
+//end
 
 pub fn create_new_user<D: Db>(db: &mut D, u: NewUser) -> Result<()> {
     validate::username(&u.username)?;

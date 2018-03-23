@@ -55,6 +55,7 @@ pub fn routes() -> Vec<Route> {
         get_bbox_subscriptions,
         unsubscribe_all_bboxes,
         get_entry,
+        get_effect, //oc addition
         post_entry,
         post_effect, //our addition
         post_user,
@@ -399,6 +400,26 @@ impl<'r> Responder<'r> for AppError {
 }
 
 //our section
+
+#[get("/effects/<ids>")]
+fn get_effect(db: DbConn, ids: String) -> Result<Vec<json::Effect>> {
+    let ids = util::extract_ids(&ids);
+    let effects = usecase::get_effects(&*db, &ids)?;
+    //our deleted fn: let tags = usecase::get_tags_by_effect_ids(&*db.get()?, &ids)?;
+    //our debugly
+    //our deactivate: println!("tags in web::get_effect: {:?}", tags);
+    //our: might be needed in scope, doesn't work, normal
+    let ratings = usecase::get_ratings_by_entry_ids(&*db, &ids)?;
+    Ok(Json(effects
+        .into_iter()
+        .map(|e|{
+            let r = ratings.get(&e.id).cloned().unwrap_or_else(|| vec![]);
+            json::Effect::from_effect_with_ratings(e,r) //our t out 
+        })
+        .collect::<Vec<json::Effect>>(),
+    ))
+}
+
 #[post("/effects", format = "application/json", data = "<e>")]
 fn post_effect(mut db: DbConn, e: Json<usecase::NewEffect>) -> Result<String> {
     let e = e.into_inner();

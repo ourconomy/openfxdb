@@ -36,25 +36,6 @@ use self::sqlite::create_connection_pool;
 type Result<T> = result::Result<Json<T>, AppError>;
 
 //our: method get not found for DbConn --> check later
-//  #[get("/effects/<ids>")]
-//  fn get_effect(db: DbConn, ids: String) -> Result<Vec<json::Effect>> {
-//      let ids = extract_ids(&ids);
-//      let effects = usecase::get_effects(&*db.get()?, &ids)?;
-//      //our deleted fn: let tags = usecase::get_tags_by_effect_ids(&*db.get()?, &ids)?;
-//      //our debugly
-//      //our deactivate: println!("tags in web::get_effect: {:?}", tags);
-//      //our: might be needed in scope:
-//      let ratings = usecase::get_ratings_by_entry_ids(&*db.get()?, &ids)?;
-//      Ok(Json(effects
-//          .into_iter()
-//          .map(|e|{
-//              //our out: let t = tags.get(&e.id).cloned().unwrap_or_else(|| vec![]);
-//              let r = ratings.get(&e.id).cloned().unwrap_or_else(|| vec![]);
-//              json::Effect::from_effect_with_tags_and_ratings(e,r) //our t out 
-//          })
-//          .collect::<Vec<json::Effect>>()))
-//  }
-
 
 //  #[put("/effects/<id>", format = "application/json", data = "<e>")]
 //  fn put_effect(db: DbConn, id: String, e: Json<usecase::UpdateEffect>) -> Result<String> {
