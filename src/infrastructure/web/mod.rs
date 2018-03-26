@@ -37,15 +37,6 @@ type Result<T> = result::Result<Json<T>, AppError>;
 
 //our: method get not found for DbConn --> check later
 
-//  #[put("/effects/<id>", format = "application/json", data = "<e>")]
-//  fn put_effect(db: DbConn, id: String, e: Json<usecase::UpdateEffect>) -> Result<String> {
-//      let e = e.into_inner();
-//      usecase::update_effect(&mut *db.get()?, e.clone())?;
-//      //our: let email_addresses = usecase::email_addresses_to_notify(&e.lat, &e.lng, &mut *db.get()?);
-//      // let all_categories = db.get()?.all_categories()?;
-//      // notify_update_entry(email_addresses, &e, all_categories);
-//      Ok(Json(id))
-//  }
 
 //  #[post("/effects", format = "application/json", data = "<e>")]
 //  fn post_effect(db: DbConn, e: Json<usecase::NewEffect>) -> Result<String> {

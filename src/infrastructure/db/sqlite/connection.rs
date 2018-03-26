@@ -269,44 +269,55 @@ impl Db for SqliteConnection {
         })
     }
 
-//our: comment out because trait bound not satisfied
-//  fn get_effect(&self, e_id: &str) -> Result<Effect> {
-//      use self::schema::effects::dsl as e_dsl;
-//      //our: unused import: use self::schema::entry_category_relations::dsl as e_c_dsl;
+//our: 
+    fn get_effect(&self, e_id: &str) -> Result<Effect> {
+        use self::schema::effects::dsl as e_dsl;
+        use self::schema::effect_tag_relations::dsl as e_t_dsl;
+        //our: unused import: use self::schema::entry_category_relations::dsl as e_c_dsl;
 
-//      let models::Effect {
-//          id,
-//          created,
-//          version,
-//          title,
-//          description,
-//          origin,
-//          license,
-//          ..
-//      } = e_dsl::effects
-//          .filter(e_dsl::id.eq(e_id))
-//          .filter(e_dsl::current.eq(true))
-//          .first(self)?;
+        let models::Effect {
+            id,
+            created,
+            version,
+            title,
+            description,
+            origin,
+            homepage,
+            license,
+            ..
+        } = e_dsl::effects
+            .filter(e_dsl::id.eq(e_id))
+            .filter(e_dsl::current.eq(true))
+            .first(self)?;
 
-//      //our: currently unused?
-//    //let categories = e_c_dsl::entry_category_relations
-//    //    .filter(e_c_dsl::entry_id.eq(&id))
-//    //    .load::<models::EntryCategoryRelation>(self)?
-//    //    .into_iter()
-//    //    .map(|r| r.category_id)
-//    //    .collect();
+        //our: currently unused?
+      //let categories = e_c_dsl::entry_category_relations
+      //    .filter(e_c_dsl::entry_id.eq(&id))
+      //    .load::<models::EntryCategoryRelation>(self)?
+      //    .into_iter()
+      //    .map(|r| r.category_id)
+      //    .collect();
 
-//      Ok(Effect {
-//          id,
-//          created: created as u64,
-//          version: version as u64,
-//          title,
-//          description,
-//          origin,
-//          //categories,
-//          license,
-//      })
-//  }
+        let tags = e_t_dsl::effect_tag_relations
+            .filter(e_t_dsl::effect_id.eq(&id))
+            .load::<models::EffectTagRelation>(self)?
+            .into_iter()
+            .map(|r| r.tag_id)
+            .collect();
+
+        Ok(Effect {
+            id,
+            created: created as u64,
+            version: version as u64,
+            title,
+            description,
+            origin,
+            homepage,
+            tags,
+            //categories,
+            license,
+        })
+    }
 
     fn get_entries_by_bbox(&self, bbox: &Bbox) -> Result<Vec<Entry>> {
         use self::schema::entries::dsl as e_dsl;
@@ -551,15 +562,30 @@ impl Db for SqliteConnection {
 
         let e = models::Effect::from(effect.clone());
 
+        let tag_rels: Vec<_> = effect
+            .tags
+            .iter()
+            .cloned()
+            .map(|tag_id| models::EffectTagRelation {
+                effect_id: effect.id.clone(),
+                effect_version: effect.version as i64,
+                tag_id,
+            })
+            .collect();
+
         self.transaction::<_, diesel::result::Error, _>(|| {
             unset_current_on_all_effects(&self, &e.id)?;
             diesel::insert_into(schema::effects::table)
                 .values(&e)
                 .execute(self)?;
-        //    diesel::insert_into(schema::entry_category_relations::table)
+        //  diesel::insert_into(schema::entry_category_relations::table)
                 //WHERE NOT EXISTS
-         //       .values(&cat_rels)
-           //     .execute(self)?;
+        //      .values(&cat_rels)
+        //      .execute(self)?;
+            diesel::insert_into(schema::effect_tag_relations::table)
+                //WHERE NOT EXISTS
+                .values(&tag_rels)
+                .execute(self)?;
             Ok(())
         })?;
         Ok(())

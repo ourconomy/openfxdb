@@ -57,10 +57,11 @@ pub fn routes() -> Vec<Route> {
         get_entry,
         get_effect, //oc addition
         post_entry,
-        post_effect, //our addition
+        post_effect, //oc addition
         post_user,
         post_rating,
         put_entry,
+        put_effect, //oc addition
         get_user,
         get_categories,
         get_tags,
@@ -428,6 +429,16 @@ fn post_effect(mut db: DbConn, e: Json<usecase::NewEffect>) -> Result<String> {
     //let email_addresses = usecase::email_addresses_by_coordinate(&mut *db, &e.lat, &e.lng)?;
     //let all_categories = db.all_categories()?;
     //util::notify_create_entry(&email_addresses, &e, &id, all_categories);
+    Ok(Json(id))
+}
+
+#[put("/effects/<id>", format = "application/json", data = "<e>")]
+fn put_effect(mut db: DbConn, id: String, e: Json<usecase::UpdateEffect>) -> Result<String> {
+    let e = e.into_inner();
+    usecase::update_effect(&mut *db, e.clone())?;
+    //our: let email_addresses = usecase::email_addresses_to_notify(&e.lat, &e.lng, &mut *db.get()?);
+    // let all_categories = db.get()?.all_categories()?;
+    // notify_update_entry(email_addresses, &e, all_categories);
     Ok(Json(id))
 }
 //end

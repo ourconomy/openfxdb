@@ -142,6 +142,7 @@ pub struct UpdateEffect {
     pub title       : String,
     pub description : String,
     pub origin      : Option<String>,
+    pub homepage    : Option<String>,
     pub tags        : Vec<String>,
 }
 
@@ -389,25 +390,33 @@ pub fn update_entry<D: Db>(db: &mut D, e: UpdateEntry) -> Result<()> {
     Ok(())
 }
 
-//  pub fn update_effect<D: Db>(db: &mut D, e: UpdateEffect) -> Result<()> {
-//      let old : Effect = db.get_effect(&e.id)?;
-//      if (old.version + 1) != e.version {
-//          return Err(Error::Repo(RepoError::InvalidVersion))
-//      }
-//      let new_effect = Effect{
-//          id          :  e.id,
-//          created     :  Utc::now().timestamp() as u64,
-//          version     :  e.version,
-//          title       :  e.title,
-//          description :  e.description,
-//          origin      :  e.origin,
-//          license     :  old.license
-//      };
-//      db.update_effect(&new_effect)?;
-//      //our: Changed here too:
-//      //our deactivated: set_effect_tag_relations(db, &new_effect.id, &e.tags)?;
-//      Ok(())
-//  }
+pub fn update_effect<D: Db>(db: &mut D, e: UpdateEffect) -> Result<()> {
+    let old : Effect = db.get_effect(&e.id)?;
+    if (old.version + 1) != e.version {
+        return Err(Error::Repo(RepoError::InvalidVersion))
+    }
+    let mut tags = e.tags;
+    tags.dedup();
+    #[cfg_attr(rustfmt, rustfmt_skip)]
+    let new_effect = Effect{
+        id          :  e.id,
+        created     :  Utc::now().timestamp() as u64,
+        version     :  e.version,
+        title       :  e.title,
+        description :  e.description,
+        origin      :  e.origin,
+        homepage    :  e.homepage,
+        tags,
+        license     :  old.license
+    };
+    for t in &new_effect.tags {
+        db.create_tag_if_it_does_not_exist(&Tag { id: t.clone() })?;
+    }
+    db.update_effect(&new_effect)?;
+    //our: Changed here too:
+    //our deactivated: set_effect_tag_relations(db, &new_effect.id, &e.tags)?;
+    Ok(())
+}
 
 pub fn rate_entry<D: Db>(db: &mut D, r: RateEntry) -> Result<()> {
     let e = db.get_entry(&r.entry)?;

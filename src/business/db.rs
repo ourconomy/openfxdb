@@ -23,7 +23,7 @@ pub trait Db {
 
     fn get_entry(&self, &str) -> Result<Entry>;
     fn get_user(&self, &str) -> Result<User>;
-//our: trait bound not satisf. in connection.rs:    fn get_effect(&self, &str) -> Result<Effect>;
+    fn get_effect(&self, &str) -> Result<Effect>; //oc addition
 
     fn get_entries_by_bbox(&self, &Bbox) -> Result<Vec<Entry>>;
 
