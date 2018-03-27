@@ -60,7 +60,8 @@ pub fn effects_by_search_text<'a>(
         words.iter().any(|word| {
             effect.title.to_lowercase().contains(word)
                 || effect.description.to_lowercase().contains(word)
-                    || effect.tags.iter().any(|t| *&t == word)
+                    || ( effect.origin.is_some() && effect.origin.clone().unwrap().to_lowercase().contains(word))
+                        || effect.tags.iter().any(|t| *&t == word)
         })
     })
 }
