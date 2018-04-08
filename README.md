@@ -1,44 +1,19 @@
-# Open Fair DB with products/services
+# openfxdb
+An open, free, and libre database for effects in the economy
 
-This experimental fork of Open Fair DB can handle products and services (called 'effects' in the code). 
-It works as a backend for the [ourconomy version of Karte von morgen](https://github.com/ourconomy/kartevonmorgen) which itself extends the scope to products and services.
+It's backend for [ourconomy](https://github.com/ourconomy/ourconomy) and it can handle products and services (called 'effects' in the code). 
 
-From a technical point of view, everything that already existed for Entries has been implemented for Effects, too. 
-The 'tags' table -- as an exception to this rule -- is there for both the `entry_tag_relations` and the `effect_tag_relations`.
+The technical base is the amazing project [Karte von morgen](https://github.com/flosse/openfairdb). A lot of functionality that already existed for 'entries" has been implemented for 'effects", too. 
 
-The present version of Open Fair DB is work in progress. Todos:
+The present version is work in progress. Todos:
 
   * Clean up code and redundant comments
-  * Make effect result sorting and filtering work
+  * Add fields to effect data structure
   * Implement ratings for effects
-  * Make tag deletion work
   * ...
 
-This is the description of the original project:
-
-# Open Fair DB
-
-A micro backend for [Karte von morgen](https://github.com/flosse/kartevonmorgen/)
-written in [Rust](http://rustlang.org/).
-
-[![Build Status](https://travis-ci.org/flosse/openfairdb.svg?branch=master)](https://travis-ci.org/flosse/openfairdb)
-[![Coverage Status](https://coveralls.io/repos/github/flosse/openfairdb/badge.svg?branch=master)](https://coveralls.io/github/flosse/openfairdb?branch=master)
-[![dependency status](https://deps.rs/repo/github/flosse/openfairdb/status.svg)](https://deps.rs/repo/github/flosse/openfairdb)
-[![License](https://img.shields.io/badge/license-AGPLv3-blue.svg?style=flat)](https://github.com/flosse/openfairdb/blob/master/LICENSE)
-
-## Quick start
-
-Download the latest build
-[openfairdb-x86_64-linux-v0.3.2.tar.gz](https://github.com/flosse/openfairdb/releases/download/v0.3.2/openfairdb-x86_64-linux-v0.3.2.tar.gz),
-unpack and start it:
-
-    wget https://github.com/flosse/openfairdb/releases/download/v0.3.3/openfairdb-x86_64-linux-v0.3.3.tar.gz
-    tar xzf openfairdb-x86_64-linux-v0.3.3.tar.gz
-    ./openfairdb
-
-The API is now available at `http://127.0.0.1:676`.
-
-## Build
+## Development
+The database is written in [Rust](http://rustlang.org/).
 
 Requirements:
 
@@ -78,40 +53,28 @@ cargo install diesel_cli --no-default-features --features sqlite
 ### Compile & Run
 
 ```
-git clone https://github.com/flosse/openfairdb
-cd openfairdb/
+git clone https://github.com/ourconomy/openfxdb
+cd openfxdb/
 diesel migration run
 cargo build
 ./target/debug/openfairdb
 ```
 
-On NixOS you can build the project with:
+If you like NixOS, please go to [Karte von morgen](https://github.com/flosse/openfairdb). There you will find some valuable hints.
 
-```
-nix-build -E '(import <nixpkgs>{}).callPackage ./default.nix {}'
-```
 
 ## REST API
 
 The current REST API is quite basic and will change within the near future.
-The base URL is `http://api.ofdb.io/v0/`.
+The base URL is `http://ourconomy.org/fxapi`.
 
--  `GET /entries/:ID_1,:ID_2,...,:ID_n`
--  `POST /entries`
--  `PUT /entries/:ID`
--  `GET /categories/`
--  `GET /categories/:ID`
--  `GET /search?text=TXT&bbox=LAT_min,LNG_min,LAT_max,LNG_max&categories=C_1,C_2,...,C_n`
--  `GET /count/entries`
--  `GET /count/tags`
--  `GET /server/version`
--  `POST /users`
--  `POST /ratings`
--  `GET /ratings`
+-  `GET /effects/:ID_1,:ID_2,...,:ID_n`
+-  `POST /effects`
+-  `PUT /effects/:ID`
 
 #### JSON structures
 
-The structure of an `entry` looks like follows:
+The structure of an `effect` looks like follows:
 
 ```
 {
@@ -120,50 +83,16 @@ The structure of an `entry` looks like follows:
   "created"     : Number,
   "name"        : String,
   "description" : String,
-  "lat"         : Number,
-  "lng"         : Number,
-  "street"      : String,
-  "zip"         : String,
-  "city"        : String,
-  "country"     : String,
-  "email"       : String,
-  "telephone"   : String,
+  "origin"      : String,
   "homepage"    : String,
-  "categories"  : [String],
   "tags"        : [String],
   "license"     : String
 }
 ```
 
-The structure of a `category` looks like follows:
-
-```
-{
-  "id"      : String,
-  "version" : Number,
-  "created" : Number,
-  "name"    : String,
-  "parent"  : String
-}
-```
-
-The structure of an `rating` looks like follows:
-
-```
-{
-  "id"          : String,
-  "created"     : Number,
-  "title"       : String,
-  "user"        : String,
-  "value"       : Number,
-  "context"     : String,
-  "comments"    : Array,
-}
-```
-
 ## Logging
 
-    RUST_LOG=debug ./target/debug/openfairdb
+    RUST_LOG=debug ./target/debug/openfxdb
 
 If you want to get stacktraces on panics use
 
@@ -171,13 +100,13 @@ If you want to get stacktraces on panics use
 
 ## DB Backups
 
-At the moment the OpenFairDB does not support online backups.
-Therefore we use a simple
+At the moment the openFXDB does not support online backups.
+If you want to backup your DB file, please have a look at this 
 [script](https://github.com/flosse/openfairdb/blob/master/scripts/backup-sqlite.sh)
-that copies the DB file once a day.
+.
 
 # License
 
-Copyright (c) 2015 - 2018 Markus Kohlhase
+Copyright (c) 2015 - 2018 Markus Kohlhase and also to a small extent 2018 Oliver Sendelbach
 
 This project is licensed under the AGPLv3 license.
