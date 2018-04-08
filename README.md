@@ -3,7 +3,7 @@ An open, free, and libre database for effects in the economy
 
 It's backend for [ourconomy](https://github.com/ourconomy/ourconomy) and it can handle products and services (called 'effects' in the code). 
 
-The technical base is the amazing project [Karte von morgen](https://github.com/flosse/openfairdb). A lot of functionality that already existed for 'entries" has been implemented for 'effects", too. 
+The technical base is the amazing project [Open Fair DB](https://github.com/flosse/openfairdb). A lot of functionality that already existed for 'entries" has been implemented for 'effects", too. 
 
 The present version is work in progress. Todos:
 
@@ -60,7 +60,7 @@ cargo build
 ./target/debug/openfairdb
 ```
 
-If you like NixOS, please go to [Karte von morgen](https://github.com/flosse/openfairdb). There you will find some valuable hints.
+If you like NixOS, please go to [Open Fair DB](https://github.com/flosse/openfairdb). There you will find some valuable hints.
 
 
 ## REST API
