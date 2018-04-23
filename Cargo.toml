@@ -1,7 +1,7 @@
 [package]
-name = "openfairdb"
+name = "openfxdb"
 version = "0.3.4-dev"
-authors = ["Markus Kohlhase <mail@markus-kohlhase.de>"]
+authors = ["Markus Kohlhase <mail@markus-kohlhase.de>, Oliver Sendelbach <info@ourconomy.org>"]
 
 [dependencies]
 clap = "2"
