@@ -104,6 +104,7 @@ table! {
         title -> Text,
         description -> Text,
         origin -> Nullable<Text>,
+        origin_id -> Nullable<Text>,
         homepage -> Nullable<Text>,
         license -> Nullable<Text>,
     }

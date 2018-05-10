@@ -23,6 +23,7 @@ pub struct Entry {
     pub license     : Option<String>,
 }
 
+//oc section
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Serialize)]
 pub struct Effect {
@@ -31,13 +32,21 @@ pub struct Effect {
     pub version     : u64,
     pub title       : String,
     pub description : String,
-    pub origin      : Option<String>,
-    // pub categories  : Vec<String>,
+    pub origin      : OriginResponse,
     pub homepage    : Option<String>,
     pub tags        : Vec<String>,
     pub ratings     : Vec<String>,
     pub license     : Option<String>,
 }
+
+#[cfg_attr(rustfmt, rustfmt_skip)]
+#[derive(Serialize)]
+pub struct OriginResponse {
+    pub value       : Option<String>,
+    pub label       : Option<String>,
+}
+
+//end
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Serialize, Deserialize)]
@@ -58,11 +67,6 @@ pub struct Comment {
     pub created     : u64,
     pub text        : String,
 }
-
-//our:  pub struct SearchResult {
-//      pub visible   : Vec<String>,
-//      pub invisible : Vec<String>,
-//      pub effects   : Vec<String> 
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Serialize)]
@@ -126,15 +130,14 @@ impl Entry {
 
 //oc section
 impl Effect {
-    pub fn from_effect_with_ratings(e: e::Effect, ratings: Vec<e::Rating>) -> Effect {
+    pub fn from_effect_with_ratings(e: e::Effect, ratings: Vec<e::Rating>, o: OriginResponse) -> Effect {
         Effect{
             id          : e.id,
             created     : e.created,
             version     : e.version,
             title       : e.title,
             description : e.description,
-            origin      : e.origin,
-            // useless? categories  : e.categories,
+            origin      : o,
             homepage    : e.homepage,
             tags        : e.tags,
             ratings     : ratings.into_iter().map(|r|r.id).collect(),

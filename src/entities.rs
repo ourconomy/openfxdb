@@ -30,6 +30,7 @@ pub struct Effect {
     pub title       : String,
     pub description : String,
     pub origin	    : Option<String>,
+    pub origin_id   : Option<String>,
     pub homepage    : Option<String>,
     pub tags        : Vec<String>,
     pub license     : Option<String>,
@@ -60,7 +61,7 @@ pub enum ObjectId {
     Comment(String),
     #[serde(rename = "rating")]
     Rating(String),
-    #[serde(rename="effect")]
+    #[serde(rename = "effect")]
     Effect(String),
     #[serde(rename = "bbox_subscription")]
     BboxSubscription(String),

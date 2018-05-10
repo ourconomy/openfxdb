@@ -32,6 +32,7 @@ pub struct Effect {
     pub title: String,
     pub description: String,
     pub origin: Option<String>,
+    pub origin_id: Option<String>,
     pub homepage: Option<String>,
     pub license: Option<String>,
 }

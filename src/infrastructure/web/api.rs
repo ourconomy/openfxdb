@@ -116,7 +116,7 @@ fn get_search(db: DbConn, search: SearchQuery) -> Result<json::SearchResponse> {
         tags,
         entry_ratings: &*avg_ratings,
     };
-    
+
     //oc enhanced line
     let (visible, invisible, effects) = usecase::search(&*db, &req)?;
 
@@ -137,7 +137,7 @@ fn get_search(db: DbConn, search: SearchQuery) -> Result<json::SearchResponse> {
             lng: e.lng,
         })
         .collect();
-   
+
     //oc section
     let effects = effects
         .iter()
@@ -406,16 +406,14 @@ impl<'r> Responder<'r> for AppError {
 fn get_effect(db: DbConn, ids: String) -> Result<Vec<json::Effect>> {
     let ids = util::extract_ids(&ids);
     let effects = usecase::get_effects(&*db, &ids)?;
-    //our deleted fn: let tags = usecase::get_tags_by_effect_ids(&*db.get()?, &ids)?;
-    //our debugly
-    //our deactivate: println!("tags in web::get_effect: {:?}", tags);
-    //our: might be needed in scope, doesn't work, normal
+    //oc: ratings might be needed in scope, doesn't work, normal
     let ratings = usecase::get_ratings_by_entry_ids(&*db, &ids)?;
     Ok(Json(effects
         .into_iter()
         .map(|e|{
             let r = ratings.get(&e.id).cloned().unwrap_or_else(|| vec![]);
-            json::Effect::from_effect_with_ratings(e,r) //our t out 
+            let o = json::OriginResponse {value: e.clone().origin_id, label: e.clone().origin};
+            json::Effect::from_effect_with_ratings(e,r,o)
         })
         .collect::<Vec<json::Effect>>(),
     ))
@@ -425,10 +423,6 @@ fn get_effect(db: DbConn, ids: String) -> Result<Vec<json::Effect>> {
 fn post_effect(mut db: DbConn, e: Json<usecase::NewEffect>) -> Result<String> {
     let e = e.into_inner();
     let id = usecase::create_new_effect(&mut *db, e.clone())?;
-    //our clean up
-    //let email_addresses = usecase::email_addresses_by_coordinate(&mut *db, &e.lat, &e.lng)?;
-    //let all_categories = db.all_categories()?;
-    //util::notify_create_entry(&email_addresses, &e, &id, all_categories);
     Ok(Json(id))
 }
 
@@ -436,9 +430,6 @@ fn post_effect(mut db: DbConn, e: Json<usecase::NewEffect>) -> Result<String> {
 fn put_effect(mut db: DbConn, id: String, e: Json<usecase::UpdateEffect>) -> Result<String> {
     let e = e.into_inner();
     usecase::update_effect(&mut *db, e.clone())?;
-    //our: let email_addresses = usecase::email_addresses_to_notify(&e.lat, &e.lng, &mut *db.get()?);
-    // let all_categories = db.get()?.all_categories()?;
-    // notify_update_entry(email_addresses, &e, all_categories);
     Ok(Json(id))
 }
 //end

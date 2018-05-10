@@ -34,10 +34,10 @@ pub trait Db {
     fn all_comments(&self) -> Result<Vec<Comment>>;
     fn all_users(&self) -> Result<Vec<User>>;
     fn all_bbox_subscriptions(&self) -> Result<Vec<BboxSubscription>>;
-    fn all_effects(&self) -> Result<Vec<Effect>>; //our
+    fn all_effects(&self) -> Result<Vec<Effect>>; //oc
 
     fn update_entry(&mut self, &Entry) -> Result<()>;
-    fn update_effect(&mut self, &Effect) -> Result<()>; //our added
+    fn update_effect(&mut self, &Effect) -> Result<()>; //oc added
     fn confirm_email_address(&mut self, &str) -> Result<User>; // TODO: move into business layer
 
     fn delete_bbox_subscription(&mut self, &str) -> Result<()>;

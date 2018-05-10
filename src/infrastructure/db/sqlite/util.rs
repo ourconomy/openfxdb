@@ -46,6 +46,7 @@ impl From<e::Entry> for Entry {
     }
 }
 
+//oc
 impl From<e::Effect> for Effect {
     fn from(e: e::Effect) -> Effect {
         let e::Effect {
@@ -55,6 +56,7 @@ impl From<e::Effect> for Effect {
             title,
             description,
             origin,
+            origin_id,
             homepage,
             license,
             ..
@@ -68,6 +70,7 @@ impl From<e::Effect> for Effect {
             title,
             description,
             origin,
+            origin_id,
             homepage,
             license,
         }
@@ -119,8 +122,6 @@ impl From<e::Tag> for Tag {
         Tag { id: t.id }
     }
 }
-
-//our Effect_tag_relation were here
 
 impl From<User> for e::User {
     fn from(u: User) -> e::User {

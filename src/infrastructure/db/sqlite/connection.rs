@@ -73,7 +73,7 @@ impl Db for SqliteConnection {
         })?;
         Ok(())
     }
-    
+
     fn create_effect(&mut self, e: &Effect) -> Result<()> {
         let new_effect= models::Effect::from(e.clone());
         let tag_rels: Vec<_> = e.tags
@@ -98,7 +98,7 @@ impl Db for SqliteConnection {
         })?;
         Ok(())
     }
-    
+
     fn create_tag_if_it_does_not_exist(&mut self, t: &Tag) -> Result<()> {
         let res = diesel::insert_into(schema::tags::table)
             .values(&models::Tag::from(t.clone()))
@@ -269,11 +269,10 @@ impl Db for SqliteConnection {
         })
     }
 
-//our: 
+//oc:
     fn get_effect(&self, e_id: &str) -> Result<Effect> {
         use self::schema::effects::dsl as e_dsl;
         use self::schema::effect_tag_relations::dsl as e_t_dsl;
-        //our: unused import: use self::schema::entry_category_relations::dsl as e_c_dsl;
 
         let models::Effect {
             id,
@@ -282,6 +281,7 @@ impl Db for SqliteConnection {
             title,
             description,
             origin,
+            origin_id,
             homepage,
             license,
             ..
@@ -289,14 +289,6 @@ impl Db for SqliteConnection {
             .filter(e_dsl::id.eq(e_id))
             .filter(e_dsl::current.eq(true))
             .first(self)?;
-
-        //our: currently unused?
-      //let categories = e_c_dsl::entry_category_relations
-      //    .filter(e_c_dsl::entry_id.eq(&id))
-      //    .load::<models::EntryCategoryRelation>(self)?
-      //    .into_iter()
-      //    .map(|r| r.category_id)
-      //    .collect();
 
         let tags = e_t_dsl::effect_tag_relations
             .filter(e_t_dsl::effect_id.eq(&id))
@@ -312,9 +304,9 @@ impl Db for SqliteConnection {
             title,
             description,
             origin,
+            origin_id,
             homepage,
             tags,
-            //categories,
             license,
         })
     }
@@ -435,32 +427,20 @@ impl Db for SqliteConnection {
             })
             .collect())
     }
-//oc: 
+
+    //oc:
     fn all_effects(&self) -> Result<Vec<Effect>> {
         use self::schema::effects::dsl as e_dsl;
-        //use self::schema::entry_category_relations::dsl as e_c_dsl;
         use self::schema::effect_tag_relations::dsl as e_t_dsl;
 
         let effects: Vec<models::Effect> =
             e_dsl::effects.filter(e_dsl::current.eq(true)).load(self)?;
-
         let tag_rels = e_t_dsl::effect_tag_relations.load::<models::EffectTagRelation>(self)?;
-
-        // cat_rels are not used
-        //let cat_rels = e_c_dsl::entry_category_relations
-        //    .load::<models::EntryCategoryRelation>(self)?;
 
         Ok(
           effects
               .into_iter()
               .map(|e| {
-        //          let cats = cat_rels
-        //            .iter()
-        //            .filter(|r| r.entry_id == e.id)
-        //            .filter(|r| r.entry_version == e.version)
-        //            .map(|r| &r.category_id)
-        //            .cloned()
-        //            .collect();
                 let tags = tag_rels
                     .iter()
                     .filter(|r| r.effect_id == e.id)
@@ -475,6 +455,7 @@ impl Db for SqliteConnection {
                     title: e.title,
                     description: e.description,
                     origin: e.origin,
+                    origin_id: e.origin_id,
                     homepage: e.homepage,
                     tags: tags,
                     license: e.license,
@@ -558,8 +539,8 @@ impl Db for SqliteConnection {
     }
 
 
+    //oc
     fn update_effect(&mut self, effect: &Effect) -> Result<()> {
-
         let e = models::Effect::from(effect.clone());
 
         let tag_rels: Vec<_> = effect
@@ -578,10 +559,6 @@ impl Db for SqliteConnection {
             diesel::insert_into(schema::effects::table)
                 .values(&e)
                 .execute(self)?;
-        //  diesel::insert_into(schema::entry_category_relations::table)
-                //WHERE NOT EXISTS
-        //      .values(&cat_rels)
-        //      .execute(self)?;
             diesel::insert_into(schema::effect_tag_relations::table)
                 //WHERE NOT EXISTS
                 .values(&tag_rels)

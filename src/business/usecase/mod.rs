@@ -1,5 +1,6 @@
 use super::error::{Error, ParameterError, RepoError};
 use std::result;
+use std::string;
 use chrono::*;
 use entities::*;
 use super::db::Db;
@@ -88,16 +89,37 @@ pub struct NewEntry {
     pub license     : String,
 }
 
+//oc section, struct definitions
+#[cfg_attr(rustfmt, rustfmt_skip)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NewOrigin {
+    pub label       : Option<String>,
+    pub value       : Option<String>,
+}
+
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Deserialize, Debug, Clone)]
 pub struct NewEffect {
     pub title       : String,
     pub description : String,
-    pub origin      : Option<String>,
+    pub origin      : Option<NewOrigin>,
     pub homepage    : Option<String>,
     pub tags        : Vec<String>,
     pub license     : String,
 }
+
+#[cfg_attr(rustfmt, rustfmt_skip)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct UpdateEffect {
+    pub id          : String,
+    pub version     : u64,
+    pub title       : String,
+    pub description : String,
+    pub origin      : Option<NewOrigin>,
+    pub homepage    : Option<String>,
+    pub tags        : Vec<String>,
+}
+//end
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct NewUser {
@@ -131,18 +153,6 @@ pub struct UpdateEntry {
     pub telephone   : Option<String>,
     pub homepage    : Option<String>,
     pub categories  : Vec<String>,
-    pub tags        : Vec<String>,
-}
-
-#[cfg_attr(rustfmt, rustfmt_skip)]
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct UpdateEffect {
-    pub id          : String,
-    pub version     : u64,
-    pub title       : String,
-    pub description : String,
-    pub origin      : Option<String>,
-    pub homepage    : Option<String>,
     pub tags        : Vec<String>,
 }
 
@@ -236,6 +246,68 @@ pub fn get_effects<D:Db>(db : &D, ids : &[String]) -> Result<Vec<Effect>> {
         .collect();
     Ok(effects)
 }
+
+pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
+    let mut tags: Vec<_> = e.tags.into_iter().map(|t| t.replace("#", "")).collect();
+    tags.dedup();
+
+    #[cfg_attr(rustfmt, rustfmt_skip)]
+    let new_effect = Effect{
+        id          :  Uuid::new_v4().simple().to_string(),
+        created     :  Utc::now().timestamp() as u64,
+        version     :  0,
+        title       :  e.title,
+        description :  e.description,
+        origin      :  e.origin.clone()
+                        .map(|o| o.label
+                          .unwrap_or_else(|| string::String::new())),
+        origin_id   :  e.origin
+                        .map(|o| o.value
+                          .unwrap_or_else(|| string::String::new())),
+        homepage    :  e.homepage,
+        tags,
+        license     :  Some(e.license)
+    };
+    //oc: we don't need to val homepage and email yet:
+    // new_effect.validate()?;
+    for t in &new_effect.tags {
+        db.create_tag_if_it_does_not_exist(&Tag { id: t.clone() })?;
+    }
+    db.create_effect(&new_effect)?;
+    Ok(new_effect.id)
+}
+
+pub fn update_effect<D: Db>(db: &mut D, e: UpdateEffect) -> Result<()> {
+    let old : Effect = db.get_effect(&e.id)?;
+    if (old.version + 1) != e.version {
+        return Err(Error::Repo(RepoError::InvalidVersion))
+    }
+    let mut tags = e.tags;
+    tags.dedup();
+    #[cfg_attr(rustfmt, rustfmt_skip)]
+    let new_effect = Effect{
+        id          :  e.id,
+        created     :  Utc::now().timestamp() as u64,
+        version     :  e.version,
+        title       :  e.title,
+        description :  e.description,
+        origin      :  e.origin.clone()
+                        .map(|o| o.label
+                          .unwrap_or_else(|| string::String::new())),
+        origin_id   :  e.origin
+                        .map(|o| o.value
+                          .unwrap_or_else(|| string::String::new())),
+        homepage    :  e.homepage,
+        tags,
+        license     :  old.license
+    };
+    for t in &new_effect.tags {
+        db.create_tag_if_it_does_not_exist(&Tag { id: t.clone() })?;
+    }
+    db.update_effect(&new_effect)?;
+    Ok(())
+}
+
 //end
 
 pub fn create_new_user<D: Db>(db: &mut D, u: NewUser) -> Result<()> {
@@ -329,32 +401,6 @@ pub fn create_new_entry<D: Db>(db: &mut D, e: NewEntry) -> Result<String> {
     Ok(new_entry.id)
 }
 
-pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
-    let mut tags: Vec<_> = e.tags.into_iter().map(|t| t.replace("#", "")).collect();
-    tags.dedup();
-
-    #[cfg_attr(rustfmt, rustfmt_skip)]
-    let new_effect = Effect{
-        id          :  Uuid::new_v4().simple().to_string(),
-        created     :  Utc::now().timestamp() as u64,
-        version     :  0,
-        title       :  e.title,
-        description :  e.description,
-        origin      :  e.origin,
-        homepage    :  e.homepage,
-        tags,
-        license     :  Some(e.license)
-    };
-    //our: we don't need to val homepage and email yet:
-    // new_effect.validate()?;
-    for t in &new_effect.tags {
-        db.create_tag_if_it_does_not_exist(&Tag { id: t.clone() })?;
-    }
-    db.create_effect(&new_effect)?;
-    //our: deactivate until exists again: set_effect_tag_relations(db, &new_effect.id, &e.tags)?;
-    Ok(new_effect.id)
-}
-
 pub fn update_entry<D: Db>(db: &mut D, e: UpdateEntry) -> Result<()> {
     let old: Entry = db.get_entry(&e.id)?;
     if (old.version + 1) != e.version {
@@ -387,34 +433,6 @@ pub fn update_entry<D: Db>(db: &mut D, e: UpdateEntry) -> Result<()> {
         db.create_tag_if_it_does_not_exist(&Tag { id: t.clone() })?;
     }
     db.update_entry(&new_entry)?;
-    Ok(())
-}
-
-pub fn update_effect<D: Db>(db: &mut D, e: UpdateEffect) -> Result<()> {
-    let old : Effect = db.get_effect(&e.id)?;
-    if (old.version + 1) != e.version {
-        return Err(Error::Repo(RepoError::InvalidVersion))
-    }
-    let mut tags = e.tags;
-    tags.dedup();
-    #[cfg_attr(rustfmt, rustfmt_skip)]
-    let new_effect = Effect{
-        id          :  e.id,
-        created     :  Utc::now().timestamp() as u64,
-        version     :  e.version,
-        title       :  e.title,
-        description :  e.description,
-        origin      :  e.origin,
-        homepage    :  e.homepage,
-        tags,
-        license     :  old.license
-    };
-    for t in &new_effect.tags {
-        db.create_tag_if_it_does_not_exist(&Tag { id: t.clone() })?;
-    }
-    db.update_effect(&new_effect)?;
-    //our: Changed here too:
-    //our deactivated: set_effect_tag_relations(db, &new_effect.id, &e.tags)?;
     Ok(())
 }
 
