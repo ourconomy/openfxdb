@@ -19,11 +19,13 @@ pub trait Db {
     fn create_comment(&mut self, &Comment) -> Result<()>;
     fn create_rating(&mut self, &Rating) -> Result<()>;
     fn create_bbox_subscription(&mut self, &BboxSubscription) -> Result<()>;
-    fn create_effect(&mut self, &Effect) -> Result<()>; //our added
+    fn create_effect(&mut self, &Effect) -> Result<()>; //oc added
+    fn create_upstream(&mut self, u: &Upstream) -> Result<()>; //oc added
 
     fn get_entry(&self, &str) -> Result<Entry>;
     fn get_user(&self, &str) -> Result<User>;
     fn get_effect(&self, &str) -> Result<Effect>; //oc addition
+    //fn get_upstream(&self, &str) -> Result<Upstream>; //oc addition
 
     fn get_entries_by_bbox(&self, &Bbox) -> Result<Vec<Entry>>;
 
@@ -35,6 +37,7 @@ pub trait Db {
     fn all_users(&self) -> Result<Vec<User>>;
     fn all_bbox_subscriptions(&self) -> Result<Vec<BboxSubscription>>;
     fn all_effects(&self) -> Result<Vec<Effect>>; //oc
+    //fn all_upstreams(&self) -> Result<Vec<Upstream>>; //oc
 
     fn update_entry(&mut self, &Entry) -> Result<()>;
     fn update_effect(&mut self, &Effect) -> Result<()>; //oc added

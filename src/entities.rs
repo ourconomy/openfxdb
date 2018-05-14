@@ -21,6 +21,7 @@ pub struct Entry {
     pub license     : Option<String>,
 }
 
+//oc section
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Effect {
@@ -35,6 +36,22 @@ pub struct Effect {
     pub tags        : Vec<String>,
     pub license     : Option<String>,
 }
+
+#[cfg_attr(rustfmt, rustfmt_skip)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+pub struct Upstream {
+    pub id                  : String,
+    pub created             : u64,
+    pub effect_id           : String,
+    pub effect_version      : u64,
+    pub upstream_effect_id  : Option<String>,
+    pub upstream_effect     : Option<String>,
+    pub number              : Option<u64>,
+    pub transfer_unit       : Option<String>,
+    pub amount              : Option<f64>,
+    pub comment             : Option<String>,
+}
+//end
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Category {

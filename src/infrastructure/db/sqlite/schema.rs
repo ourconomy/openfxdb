@@ -118,6 +118,22 @@ table! {
         tag_id -> Text,
     }
 }
+
+table! {
+    upstreams (id, effect_id, effect_version) {
+        id -> Text,
+        created -> BigInt,
+        effect_id -> Text,
+        effect_version -> BigInt,
+        upstream_effect_id -> Nullable<Text>,
+        upstream_effect -> Nullable<Text>,
+        number -> Nullable<BigInt>,
+        transfer_unit -> Nullable<Text>,
+        amount -> Nullable<Double>,
+        comment -> Nullable<Text>,
+    }
+}
+
 //end
 
 joinable!(bbox_subscriptions -> users (username));
@@ -138,4 +154,5 @@ allow_tables_to_appear_in_same_query!(
     ratings,
     tags,
     users,
+    upstreams, //oc
 );

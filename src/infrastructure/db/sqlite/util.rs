@@ -46,7 +46,7 @@ impl From<e::Entry> for Entry {
     }
 }
 
-//oc
+//oc section
 impl From<e::Effect> for Effect {
     fn from(e: e::Effect) -> Effect {
         let e::Effect {
@@ -76,6 +76,36 @@ impl From<e::Effect> for Effect {
         }
     }
 }
+impl From<e::Upstream> for Upstream {
+    fn from(u: e::Upstream) -> Upstream {
+        let e::Upstream {
+            id,
+            created,
+            effect_id,
+            effect_version,
+            upstream_effect_id,
+            upstream_effect,
+            number,
+            transfer_unit,
+            amount,
+            comment,
+        } = u;
+
+        Upstream {
+            id,
+            created: created as i64,
+            effect_id,
+            effect_version: effect_version as i64,
+            upstream_effect_id,
+            upstream_effect,
+            number: number.map(|n| n as i64),
+            transfer_unit,
+            amount,
+            comment,
+        }
+    }
+}
+//end
 
 impl From<Category> for e::Category {
     fn from(c: Category) -> e::Category {

@@ -23,21 +23,6 @@ pub struct Entry {
 }
 
 #[derive(Queryable, Insertable)]
-#[table_name = "effects"]
-pub struct Effect {
-    pub id: String,
-    pub created: i64,
-    pub version: i64,
-    pub current: bool,
-    pub title: String,
-    pub description: String,
-    pub origin: Option<String>,
-    pub origin_id: Option<String>,
-    pub homepage: Option<String>,
-    pub license: Option<String>,
-}
-
-#[derive(Queryable, Insertable)]
 #[table_name = "categories"]
 pub struct Category {
     pub id: String,
@@ -61,15 +46,6 @@ pub struct EntryCategoryRelation {
 pub struct EntryTagRelation {
     pub entry_id: String,
     pub entry_version: i64,
-    pub tag_id: String,
-}
-
-#[derive(Identifiable, Queryable, Insertable, Associations)]
-#[table_name = "effect_tag_relations"]
-#[primary_key(effect_id, effect_version, tag_id)]
-pub struct EffectTagRelation {
-    pub effect_id: String,
-    pub effect_version: i64,
     pub tag_id: String,
 }
 
@@ -123,3 +99,46 @@ pub struct BboxSubscription {
     pub north_east_lng: f64,
     pub username: String,
 }
+
+//oc section
+#[derive(Queryable, Insertable)]
+#[table_name = "effects"]
+pub struct Effect {
+    pub id: String,
+    pub created: i64,
+    pub version: i64,
+    pub current: bool,
+    pub title: String,
+    pub description: String,
+    pub origin: Option<String>,
+    pub origin_id: Option<String>,
+    pub homepage: Option<String>,
+    pub license: Option<String>,
+}
+
+#[derive(Identifiable, Queryable, Insertable, Associations)]
+#[table_name = "effect_tag_relations"]
+#[primary_key(effect_id, effect_version, tag_id)]
+pub struct EffectTagRelation {
+    pub effect_id: String,
+    pub effect_version: i64,
+    pub tag_id: String,
+}
+
+#[derive(Identifiable, Queryable, Insertable, Associations)]
+#[table_name = "upstreams"]
+#[primary_key(effect_id, effect_version, id)]
+pub struct Upstream {
+    pub id: String,
+    pub created: i64,
+    pub effect_id: String,
+    pub effect_version: i64,
+    pub upstream_effect_id: Option<String>,
+    pub upstream_effect: Option<String>,
+    pub number: Option<i64>,
+    pub transfer_unit: Option<String>,
+    pub amount: Option<f64>,
+    pub comment: Option<String>,
+}
+//end
+

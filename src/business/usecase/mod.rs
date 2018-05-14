@@ -1,6 +1,6 @@
 use super::error::{Error, ParameterError, RepoError};
 use std::result;
-use std::string;
+use std::string; //oc
 use chrono::*;
 use entities::*;
 use super::db::Db;
@@ -12,6 +12,10 @@ use pwhash::bcrypt;
 use super::geo;
 use super::sort::SortByAverageRating;
 use super::filter::InBBox;
+use std::fmt::Display; //oc
+use std::str::FromStr; //oc
+use serde::{de, Deserialize, Deserializer}; //oc
+use std::result::Result as OtherResult; //oc
 
 #[cfg(test)]
 pub mod tests;
@@ -89,7 +93,15 @@ pub struct NewEntry {
     pub license     : String,
 }
 
-//oc section, struct definitions
+  //oc section, struct definitions
+  pub fn string_to_number<'de, T, D>(deserializer: D) -> OtherResult<T, D::Error>
+      where T: FromStr,
+            T::Err: Display,
+            D: Deserializer<'de>
+  {
+  String::deserialize(deserializer)?.parse().map_err(de::Error::custom)
+  }
+
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewOrigin {
@@ -97,6 +109,24 @@ pub struct NewOrigin {
     pub value       : Option<String>,
 }
 
+//#[cfg_attr(rustfmt, rustfmt_skip)]
+//#[derive(Serialize, Deserialize, Debug, Clone)]
+//pub enum NewJsonNumber {
+//    u64,
+//    f64,
+//}
+
+#[cfg_attr(rustfmt, rustfmt_skip)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NewUpstream {
+    #[serde(deserialize_with = "string_to_number")]
+    pub upstreamNo            : u64,
+    pub upstreamEffect        : Option<String>,
+    pub upstreamTransferUnit  : Option<String>,
+    #[serde(deserialize_with = "string_to_number")]
+    pub upstreamAmount        : f64,
+    pub upstreamComment       : Option<String>,
+}
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Deserialize, Debug, Clone)]
 pub struct NewEffect {
@@ -105,6 +135,7 @@ pub struct NewEffect {
     pub origin      : Option<NewOrigin>,
     pub homepage    : Option<String>,
     pub tags        : Vec<String>,
+    pub upstreams   : Vec<NewUpstream>,
     pub license     : String,
 }
 
@@ -118,6 +149,7 @@ pub struct UpdateEffect {
     pub origin      : Option<NewOrigin>,
     pub homepage    : Option<String>,
     pub tags        : Vec<String>,
+    pub upstreams   : Vec<NewUpstream>,
 }
 //end
 
@@ -250,11 +282,33 @@ pub fn get_effects<D:Db>(db : &D, ids : &[String]) -> Result<Vec<Effect>> {
 pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
     let mut tags: Vec<_> = e.tags.into_iter().map(|t| t.replace("#", "")).collect();
     tags.dedup();
+    let now = Utc::now().timestamp() as u64;
+    let new_id = Uuid::new_v4().simple().to_string();
+    #[cfg_attr(rustfmt, rustfmt_skip)]
+    let new_upstreams: Vec<_> = e.upstreams.into_iter()
+        .map(|u| { Upstream{
+            id                  : Uuid::new_v4().simple().to_string(),
+            created             : now.clone(),
+            effect_id           : new_id.clone(),
+            effect_version      : 0,
+            //upstream_effect     : u.upstreamEffect.clone().map(|o| o.label
+            //    .unwrap_or_else(|| string::String::new())),
+            //upstream_effect_id  : u.upstreamEffect.map(|o| o.value
+            //    .unwrap_or_else(|| string::String::new())),
+            //oc simplified version before dropdown is implemented:
+            upstream_effect     : u.upstreamEffect,
+            upstream_effect_id  : Some(new_id.clone()),
+            number              : Some(u.upstreamNo),
+            transfer_unit       : u.upstreamTransferUnit,
+            amount              : Some(u.upstreamAmount),
+            comment             : u.upstreamComment,
+        }}
+        ).collect();
 
     #[cfg_attr(rustfmt, rustfmt_skip)]
     let new_effect = Effect{
-        id          :  Uuid::new_v4().simple().to_string(),
-        created     :  Utc::now().timestamp() as u64,
+        id          :  new_id,
+        created     :  now,
         version     :  0,
         title       :  e.title,
         description :  e.description,
@@ -268,12 +322,17 @@ pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
         tags,
         license     :  Some(e.license)
     };
+
     //oc: we don't need to val homepage and email yet:
     // new_effect.validate()?;
+
     for t in &new_effect.tags {
         db.create_tag_if_it_does_not_exist(&Tag { id: t.clone() })?;
     }
     db.create_effect(&new_effect)?;
+    for u in &new_upstreams {
+        db.create_upstream(u)?;
+    }
     Ok(new_effect.id)
 }
 
@@ -282,12 +341,33 @@ pub fn update_effect<D: Db>(db: &mut D, e: UpdateEffect) -> Result<()> {
     if (old.version + 1) != e.version {
         return Err(Error::Repo(RepoError::InvalidVersion))
     }
-    let mut tags = e.tags;
+    let now = Utc::now().timestamp() as u64;
+    let mut tags = e.tags.clone();
     tags.dedup();
+    #[cfg_attr(rustfmt, rustfmt_skip)]
+    let new_upstreams: Vec<_> = e.upstreams.clone().into_iter()
+        .map( |u| Upstream{
+            id                  : Uuid::new_v4().simple().to_string(),
+            created             : now.clone(),
+            effect_id           : e.id.clone(),
+            effect_version      : e.version.clone(),
+            //upstream_effect     : u.upstreamEffect.clone().map(|o| o.label
+            //    .unwrap_or_else(|| string::String::new())),
+            //upstream_effect_id  : u.upstreamEffect.map(|o| o.value
+            //    .unwrap_or_else(|| string::String::new())),
+            //oc simplified version before dropdown is implemented:
+            upstream_effect     : u.upstreamEffect,
+            upstream_effect_id  : Some(e.id.clone()),
+            number              : Some(u.upstreamNo),
+            transfer_unit       : u.upstreamTransferUnit,
+            amount              : Some(u.upstreamAmount),
+            comment             : u.upstreamComment,
+        }
+        ).collect();
     #[cfg_attr(rustfmt, rustfmt_skip)]
     let new_effect = Effect{
         id          :  e.id,
-        created     :  Utc::now().timestamp() as u64,
+        created     :  now,
         version     :  e.version,
         title       :  e.title,
         description :  e.description,
@@ -305,6 +385,9 @@ pub fn update_effect<D: Db>(db: &mut D, e: UpdateEffect) -> Result<()> {
         db.create_tag_if_it_does_not_exist(&Tag { id: t.clone() })?;
     }
     db.update_effect(&new_effect)?;
+    for u in &new_upstreams {
+        db.create_upstream(u)?;
+    }
     Ok(())
 }
 

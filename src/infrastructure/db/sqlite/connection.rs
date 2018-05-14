@@ -24,6 +24,7 @@ fn unset_current_on_all_entries(
         .execute(*con)
 }
 
+//oc section
 fn unset_current_on_all_effects(
     con: &&mut SqliteConnection,
     id: &str,
@@ -34,6 +35,7 @@ fn unset_current_on_all_effects(
     )).set(dsl::current.eq(false))
         .execute(*con)
 }
+//end
 
 impl Db for SqliteConnection {
     fn create_entry(&mut self, e: &Entry) -> Result<()> {
@@ -66,31 +68,6 @@ impl Db for SqliteConnection {
                 .values(&cat_rels)
                 .execute(self)?;
             diesel::insert_into(schema::entry_tag_relations::table)
-                //WHERE NOT EXISTS
-                .values(&tag_rels)
-                .execute(self)?;
-            Ok(())
-        })?;
-        Ok(())
-    }
-
-    fn create_effect(&mut self, e: &Effect) -> Result<()> {
-        let new_effect= models::Effect::from(e.clone());
-        let tag_rels: Vec<_> = e.tags
-            .iter()
-            .cloned()
-            .map(|tag_id| models::EffectTagRelation {
-                effect_id: e.id.clone(),
-                effect_version: e.version as i64,
-                tag_id,
-            })
-            .collect();
-        self.transaction::<_, diesel::result::Error, _>(|| {
-            unset_current_on_all_effects(&self, &e.id)?;
-            diesel::insert_into(schema::effects::table)
-                .values(&new_effect)
-                .execute(self)?;
-            diesel::insert_into(schema::effect_tag_relations::table)
                 //WHERE NOT EXISTS
                 .values(&tag_rels)
                 .execute(self)?;
@@ -269,48 +246,6 @@ impl Db for SqliteConnection {
         })
     }
 
-//oc:
-    fn get_effect(&self, e_id: &str) -> Result<Effect> {
-        use self::schema::effects::dsl as e_dsl;
-        use self::schema::effect_tag_relations::dsl as e_t_dsl;
-
-        let models::Effect {
-            id,
-            created,
-            version,
-            title,
-            description,
-            origin,
-            origin_id,
-            homepage,
-            license,
-            ..
-        } = e_dsl::effects
-            .filter(e_dsl::id.eq(e_id))
-            .filter(e_dsl::current.eq(true))
-            .first(self)?;
-
-        let tags = e_t_dsl::effect_tag_relations
-            .filter(e_t_dsl::effect_id.eq(&id))
-            .load::<models::EffectTagRelation>(self)?
-            .into_iter()
-            .map(|r| r.tag_id)
-            .collect();
-
-        Ok(Effect {
-            id,
-            created: created as u64,
-            version: version as u64,
-            title,
-            description,
-            origin,
-            origin_id,
-            homepage,
-            tags,
-            license,
-        })
-    }
-
     fn get_entries_by_bbox(&self, bbox: &Bbox) -> Result<Vec<Entry>> {
         use self::schema::entries::dsl as e_dsl;
         use self::schema::entry_category_relations::dsl as e_c_dsl;
@@ -428,41 +363,6 @@ impl Db for SqliteConnection {
             .collect())
     }
 
-    //oc:
-    fn all_effects(&self) -> Result<Vec<Effect>> {
-        use self::schema::effects::dsl as e_dsl;
-        use self::schema::effect_tag_relations::dsl as e_t_dsl;
-
-        let effects: Vec<models::Effect> =
-            e_dsl::effects.filter(e_dsl::current.eq(true)).load(self)?;
-        let tag_rels = e_t_dsl::effect_tag_relations.load::<models::EffectTagRelation>(self)?;
-
-        Ok(
-          effects
-              .into_iter()
-              .map(|e| {
-                let tags = tag_rels
-                    .iter()
-                    .filter(|r| r.effect_id == e.id)
-                    .filter(|r| r.effect_version == e.version)
-                    .map(|r| &r.tag_id)
-                    .cloned()
-                    .collect();
-                Effect {
-                    id: e.id,
-                    created: e.created as u64,
-                    version: e.version as u64,
-                    title: e.title,
-                    description: e.description,
-                    origin: e.origin,
-                    origin_id: e.origin_id,
-                    homepage: e.homepage,
-                    tags: tags,
-                    license: e.license,
-                }
-            })
-            .collect())
-    }
     fn all_categories(&self) -> Result<Vec<Category>> {
         use self::schema::categories::dsl::*;
         Ok(categories
@@ -538,36 +438,6 @@ impl Db for SqliteConnection {
         Ok(())
     }
 
-
-    //oc
-    fn update_effect(&mut self, effect: &Effect) -> Result<()> {
-        let e = models::Effect::from(effect.clone());
-
-        let tag_rels: Vec<_> = effect
-            .tags
-            .iter()
-            .cloned()
-            .map(|tag_id| models::EffectTagRelation {
-                effect_id: effect.id.clone(),
-                effect_version: effect.version as i64,
-                tag_id,
-            })
-            .collect();
-
-        self.transaction::<_, diesel::result::Error, _>(|| {
-            unset_current_on_all_effects(&self, &e.id)?;
-            diesel::insert_into(schema::effects::table)
-                .values(&e)
-                .execute(self)?;
-            diesel::insert_into(schema::effect_tag_relations::table)
-                //WHERE NOT EXISTS
-                .values(&tag_rels)
-                .execute(self)?;
-            Ok(())
-        })?;
-        Ok(())
-    }
-
     fn import_multiple_entries(&mut self, new_entries: &[Entry]) -> Result<()> {
         let imports: Vec<_> = new_entries
             .into_iter()
@@ -635,4 +505,142 @@ impl Db for SqliteConnection {
         })?;
         Ok(())
     }
+
+    //oc section
+    fn get_effect(&self, e_id: &str) -> Result<Effect> {
+        use self::schema::effects::dsl as e_dsl;
+        use self::schema::effect_tag_relations::dsl as e_t_dsl;
+
+        let models::Effect {
+            id,
+            created,
+            version,
+            title,
+            description,
+            origin,
+            origin_id,
+            homepage,
+            license,
+            ..
+        } = e_dsl::effects
+            .filter(e_dsl::id.eq(e_id))
+            .filter(e_dsl::current.eq(true))
+            .first(self)?;
+
+        let tags = e_t_dsl::effect_tag_relations
+            .filter(e_t_dsl::effect_id.eq(&id))
+            .load::<models::EffectTagRelation>(self)?
+            .into_iter()
+            .map(|r| r.tag_id)
+            .collect();
+
+        Ok(Effect {
+            id,
+            created: created as u64,
+            version: version as u64,
+            title,
+            description,
+            origin,
+            origin_id,
+            homepage,
+            tags,
+            license,
+        })
+    }
+
+    fn create_effect(&mut self, e: &Effect) -> Result<()> {
+        let new_effect= models::Effect::from(e.clone());
+        let tag_rels: Vec<_> = e.tags
+            .iter()
+            .cloned()
+            .map(|tag_id| models::EffectTagRelation {
+                effect_id: e.id.clone(),
+                effect_version: e.version as i64,
+                tag_id,
+            })
+            .collect();
+        self.transaction::<_, diesel::result::Error, _>(|| {
+            unset_current_on_all_effects(&self, &e.id)?;
+            diesel::insert_into(schema::effects::table)
+                .values(&new_effect)
+                .execute(self)?;
+            diesel::insert_into(schema::effect_tag_relations::table)
+                //WHERE NOT EXISTS
+                .values(&tag_rels)
+                .execute(self)?;
+            Ok(())
+        })?;
+        Ok(())
+    }
+
+    fn update_effect(&mut self, effect: &Effect) -> Result<()> {
+        let e = models::Effect::from(effect.clone());
+
+        let tag_rels: Vec<_> = effect
+            .tags
+            .iter()
+            .cloned()
+            .map(|tag_id| models::EffectTagRelation {
+                effect_id: effect.id.clone(),
+                effect_version: effect.version as i64,
+                tag_id,
+            })
+            .collect();
+
+        self.transaction::<_, diesel::result::Error, _>(|| {
+            unset_current_on_all_effects(&self, &e.id)?;
+            diesel::insert_into(schema::effects::table)
+                .values(&e)
+                .execute(self)?;
+            diesel::insert_into(schema::effect_tag_relations::table)
+                //WHERE NOT EXISTS
+                .values(&tag_rels)
+                .execute(self)?;
+            Ok(())
+        })?;
+        Ok(())
+    }
+
+    fn all_effects(&self) -> Result<Vec<Effect>> {
+        use self::schema::effects::dsl as e_dsl;
+        use self::schema::effect_tag_relations::dsl as e_t_dsl;
+
+        let effects: Vec<models::Effect> =
+            e_dsl::effects.filter(e_dsl::current.eq(true)).load(self)?;
+        let tag_rels = e_t_dsl::effect_tag_relations.load::<models::EffectTagRelation>(self)?;
+
+        Ok(
+          effects
+              .into_iter()
+              .map(|e| {
+                let tags = tag_rels
+                    .iter()
+                    .filter(|r| r.effect_id == e.id)
+                    .filter(|r| r.effect_version == e.version)
+                    .map(|r| &r.tag_id)
+                    .cloned()
+                    .collect();
+                Effect {
+                    id: e.id,
+                    created: e.created as u64,
+                    version: e.version as u64,
+                    title: e.title,
+                    description: e.description,
+                    origin: e.origin,
+                    origin_id: e.origin_id,
+                    homepage: e.homepage,
+                    tags: tags,
+                    license: e.license,
+                }
+            })
+            .collect())
+    }
+
+    fn create_upstream(&mut self, u: &Upstream) -> Result<()> {
+        diesel::insert_into(schema::upstreams::table)
+            .values(&models::Upstream::from(u.clone()))
+            .execute(self)?;
+        Ok(())
+    }
+
 }
