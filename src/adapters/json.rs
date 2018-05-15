@@ -35,6 +35,7 @@ pub struct Effect {
     pub origin      : OriginResponse,
     pub homepage    : Option<String>,
     pub tags        : Vec<String>,
+    pub upstreams   : Vec<UpstreamResponse>,
     pub ratings     : Vec<String>,
     pub license     : Option<String>,
 }
@@ -46,6 +47,15 @@ pub struct OriginResponse {
     pub label       : Option<String>,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
+#[derive(Serialize)]
+pub struct UpstreamResponse {
+    pub upstreamNo            : Option<String>,
+    pub upstreamEffect        : Option<String>,
+    pub upstreamTransferUnit  : Option<String>,
+    pub upstreamAmount        : Option<String>,
+    pub upstreamComment       : Option<String>,
+}
 //end
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
@@ -130,7 +140,7 @@ impl Entry {
 
 //oc section
 impl Effect {
-    pub fn from_effect_with_ratings(e: e::Effect, ratings: Vec<e::Rating>, o: OriginResponse) -> Effect {
+    pub fn from_effect_with_ratings(e: e::Effect, u: Vec<e::Upstream>, ratings: Vec<e::Rating>, o: OriginResponse) -> Effect {
         Effect{
             id          : e.id,
             created     : e.created,
@@ -140,6 +150,13 @@ impl Effect {
             origin      : o,
             homepage    : e.homepage,
             tags        : e.tags,
+            upstreams   : u.into_iter().map(|u| UpstreamResponse {
+                upstreamNo: u.number.map(|n| n.to_string()),
+                upstreamEffect: u.upstream_effect, // and u.ups..effect_id
+                upstreamTransferUnit: u.transfer_unit,
+                upstreamAmount: u.amount.map(|a| a.to_string()),
+                upstreamComment: u.comment,
+            }).collect(),
             ratings     : ratings.into_iter().map(|r|r.id).collect(),
             license     : e.license,
         }

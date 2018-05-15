@@ -109,13 +109,6 @@ pub struct NewOrigin {
     pub value       : Option<String>,
 }
 
-//#[cfg_attr(rustfmt, rustfmt_skip)]
-//#[derive(Serialize, Deserialize, Debug, Clone)]
-//pub enum NewJsonNumber {
-//    u64,
-//    f64,
-//}
-
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewUpstream {
@@ -277,6 +270,14 @@ pub fn get_effects<D:Db>(db : &D, ids : &[String]) -> Result<Vec<Effect>> {
         .filter(|e| ids.iter().any(|id| *id == e.id))
         .collect();
     Ok(effects)
+}
+
+pub fn get_upstreams<D:Db>(db : &D, ids : &[String]) -> Result<Vec<Upstream>> {
+    let upstreams = db.all_upstreams()?
+        .into_iter()
+        .filter(|u| ids.iter().any(|id| *id == u.effect_id))
+        .collect();
+    Ok(upstreams)
 }
 
 pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
@@ -692,7 +693,7 @@ pub fn search<D: Db>(db: &D, req: &SearchRequest) -> Result<(Vec<Entry>, Vec<Ent
         ))
         .collect();
 
-    let effect_results = effects; 
+    let effect_results = effects;
 //end
 
     Ok((visible_results, invisible_results, effect_results))

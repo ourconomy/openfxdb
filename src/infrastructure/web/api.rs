@@ -406,6 +406,7 @@ impl<'r> Responder<'r> for AppError {
 fn get_effect(db: DbConn, ids: String) -> Result<Vec<json::Effect>> {
     let ids = util::extract_ids(&ids);
     let effects = usecase::get_effects(&*db, &ids)?;
+    let upstreams = usecase::get_upstreams(&*db, &ids)?;
     //oc: ratings might be needed in scope, doesn't work, normal
     let ratings = usecase::get_ratings_by_entry_ids(&*db, &ids)?;
     Ok(Json(effects
@@ -413,7 +414,9 @@ fn get_effect(db: DbConn, ids: String) -> Result<Vec<json::Effect>> {
         .map(|e|{
             let r = ratings.get(&e.id).cloned().unwrap_or_else(|| vec![]);
             let o = json::OriginResponse {value: e.clone().origin_id, label: e.clone().origin};
-            json::Effect::from_effect_with_ratings(e,r,o)
+            //let u = upstreams where effect_id is equal to e.id
+            let u = upstreams.iter().filter(|i| i.clone().effect_id == e.clone().id && i.clone().effect_version.clone() == e.clone().version).cloned().collect();
+            json::Effect::from_effect_with_ratings(e,u,r,o)
         })
         .collect::<Vec<json::Effect>>(),
     ))

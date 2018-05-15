@@ -636,6 +636,32 @@ impl Db for SqliteConnection {
             .collect())
     }
 
+    fn all_upstreams(&self) -> Result<Vec<Upstream>> {
+        use self::schema::upstreams::dsl as u_dsl;
+
+        let upstreams: Vec<models::Upstream> =
+            u_dsl::upstreams.load(self)?;
+
+        Ok(
+          upstreams
+              .into_iter()
+              .map(|u| {
+                Upstream {
+                    id: u.id,
+                    created: u.created as u64,
+                    effect_id: u.effect_id,
+                    effect_version: u.effect_version as u64,
+                    upstream_effect_id: u.upstream_effect_id,
+                    upstream_effect: u.upstream_effect,
+                    number: u.number.map(|n| n as u64),
+                    transfer_unit: u.transfer_unit,
+                    amount: u.amount.map(|a| a as f64),
+                    comment: u.comment,
+                }
+              })
+              .collect())
+    }
+
     fn create_upstream(&mut self, u: &Upstream) -> Result<()> {
         diesel::insert_into(schema::upstreams::table)
             .values(&models::Upstream::from(u.clone()))
