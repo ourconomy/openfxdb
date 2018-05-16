@@ -43,15 +43,22 @@ pub struct Effect {
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Serialize)]
 pub struct OriginResponse {
-    pub value       : Option<String>,
-    pub label       : Option<String>,
+    pub value : Option<String>,
+    pub label : Option<String>,
+}
+
+#[cfg_attr(rustfmt, rustfmt_skip)]
+#[derive(Serialize)]
+pub struct UpstreamEffectResponse {
+    pub label : Option<String>,
+    pub value : Option<String>,
 }
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Serialize)]
 pub struct UpstreamResponse {
     pub upstreamNo            : Option<String>,
-    pub upstreamEffect        : Option<String>,
+    pub upstreamEffect        : Option<UpstreamEffectResponse>,
     pub upstreamTransferUnit  : Option<String>,
     pub upstreamAmount        : Option<String>,
     pub upstreamComment       : Option<String>,
@@ -152,7 +159,10 @@ impl Effect {
             tags        : e.tags,
             upstreams   : u.into_iter().map(|u| UpstreamResponse {
                 upstreamNo: u.number.map(|n| n.to_string()),
-                upstreamEffect: u.upstream_effect, // and u.ups..effect_id
+                upstreamEffect: Some(UpstreamEffectResponse {
+                    label : u.upstream_effect,
+                    value : u.upstream_effect_id,
+                }),
                 upstreamTransferUnit: u.transfer_unit,
                 upstreamAmount: u.amount.map(|a| a.to_string()),
                 upstreamComment: u.comment,

@@ -93,14 +93,16 @@ pub struct NewEntry {
     pub license     : String,
 }
 
-  //oc section, struct definitions
-  pub fn string_to_number<'de, T, D>(deserializer: D) -> OtherResult<T, D::Error>
-      where T: FromStr,
-            T::Err: Display,
-            D: Deserializer<'de>
-  {
-  String::deserialize(deserializer)?.parse().map_err(de::Error::custom)
-  }
+//oc section, struct definitions
+
+//oc Serde needs to know explicitly how to deserialize u64 und f64
+pub fn string_to_number<'de, T, D>(deserializer: D) -> OtherResult<T, D::Error>
+    where T: FromStr,
+          T::Err: Display,
+          D: Deserializer<'de>
+{
+String::deserialize(deserializer)?.parse().map_err(de::Error::custom)
+}
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -111,15 +113,25 @@ pub struct NewOrigin {
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NewUpstreamEffect {
+    pub label : Option<String>,
+    pub value : Option<String>,
+}
+
+#[cfg_attr(rustfmt, rustfmt_skip)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewUpstream {
+    #[cfg_attr(rustfmt, rustfmt_skip)]
     #[serde(deserialize_with = "string_to_number")]
     pub upstreamNo            : u64,
-    pub upstreamEffect        : Option<String>,
+    pub upstreamEffect        : Option<NewUpstreamEffect>,
     pub upstreamTransferUnit  : Option<String>,
+    #[cfg_attr(rustfmt, rustfmt_skip)]
     #[serde(deserialize_with = "string_to_number")]
     pub upstreamAmount        : f64,
     pub upstreamComment       : Option<String>,
 }
+
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Deserialize, Debug, Clone)]
 pub struct NewEffect {
@@ -292,13 +304,10 @@ pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
             created             : now.clone(),
             effect_id           : new_id.clone(),
             effect_version      : 0,
-            //upstream_effect     : u.upstreamEffect.clone().map(|o| o.label
-            //    .unwrap_or_else(|| string::String::new())),
-            //upstream_effect_id  : u.upstreamEffect.map(|o| o.value
-            //    .unwrap_or_else(|| string::String::new())),
-            //oc simplified version before dropdown is implemented:
-            upstream_effect     : u.upstreamEffect,
-            upstream_effect_id  : Some(new_id.clone()),
+            upstream_effect     : u.upstreamEffect.clone()
+                .map_or(None, |ue| ue.label),
+            upstream_effect_id  : u.upstreamEffect
+                .map_or(None, |ue| ue.value),
             number              : Some(u.upstreamNo),
             transfer_unit       : u.upstreamTransferUnit,
             amount              : Some(u.upstreamAmount),
@@ -313,12 +322,8 @@ pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
         version     :  0,
         title       :  e.title,
         description :  e.description,
-        origin      :  e.origin.clone()
-                        .map(|o| o.label
-                          .unwrap_or_else(|| string::String::new())),
-        origin_id   :  e.origin
-                        .map(|o| o.value
-                          .unwrap_or_else(|| string::String::new())),
+        origin      :  e.origin.clone().map_or(None, |ue| ue.label),
+        origin_id   :  e.origin.map_or(None, |ue| ue.value),
         homepage    :  e.homepage,
         tags,
         license     :  Some(e.license)
@@ -352,13 +357,8 @@ pub fn update_effect<D: Db>(db: &mut D, e: UpdateEffect) -> Result<()> {
             created             : now.clone(),
             effect_id           : e.id.clone(),
             effect_version      : e.version.clone(),
-            //upstream_effect     : u.upstreamEffect.clone().map(|o| o.label
-            //    .unwrap_or_else(|| string::String::new())),
-            //upstream_effect_id  : u.upstreamEffect.map(|o| o.value
-            //    .unwrap_or_else(|| string::String::new())),
-            //oc simplified version before dropdown is implemented:
-            upstream_effect     : u.upstreamEffect,
-            upstream_effect_id  : Some(e.id.clone()),
+            upstream_effect     : u.upstreamEffect.clone().map_or(None, |ue| ue.label),
+            upstream_effect_id  : u.upstreamEffect.map_or(None, |ue| ue.value),
             number              : Some(u.upstreamNo),
             transfer_unit       : u.upstreamTransferUnit,
             amount              : Some(u.upstreamAmount),
@@ -372,12 +372,8 @@ pub fn update_effect<D: Db>(db: &mut D, e: UpdateEffect) -> Result<()> {
         version     :  e.version,
         title       :  e.title,
         description :  e.description,
-        origin      :  e.origin.clone()
-                        .map(|o| o.label
-                          .unwrap_or_else(|| string::String::new())),
-        origin_id   :  e.origin
-                        .map(|o| o.value
-                          .unwrap_or_else(|| string::String::new())),
+        origin      :  e.origin.clone().map_or(None, |ue| ue.label),
+        origin_id   :  e.origin.map_or(None, |ue| ue.value),
         homepage    :  e.homepage,
         tags,
         license     :  old.license
