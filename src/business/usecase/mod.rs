@@ -140,7 +140,7 @@ pub struct NewEffect {
     pub origin      : Option<NewOrigin>,
     pub homepage    : Option<String>,
     pub tags        : Vec<String>,
-    pub upstreams   : Vec<NewUpstream>,
+    pub upstreams   : Option<Vec<NewUpstream>>,
     pub license     : String,
 }
 
@@ -154,7 +154,7 @@ pub struct UpdateEffect {
     pub origin      : Option<NewOrigin>,
     pub homepage    : Option<String>,
     pub tags        : Vec<String>,
-    pub upstreams   : Vec<NewUpstream>,
+    pub upstreams   : Option<Vec<NewUpstream>>,
 }
 //end
 
@@ -297,24 +297,26 @@ pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
     tags.dedup();
     let now = Utc::now().timestamp() as u64;
     let new_id = Uuid::new_v4().simple().to_string();
-    #[cfg_attr(rustfmt, rustfmt_skip)]
-    let new_upstreams: Vec<_> = e.upstreams.into_iter()
-        .map(|u| { Upstream{
-            id                  : Uuid::new_v4().simple().to_string(),
-            created             : now.clone(),
-            effect_id           : new_id.clone(),
-            effect_version      : 0,
-            upstream_effect     : u.upstreamEffect.clone()
-                .map_or(None, |ue| ue.label),
-            upstream_effect_id  : u.upstreamEffect
-                .map_or(None, |ue| ue.value),
-            number              : Some(u.upstreamNo),
-            transfer_unit       : u.upstreamTransferUnit,
-            amount              : Some(u.upstreamAmount),
-            comment             : u.upstreamComment,
-        }}
+    let mut new_upstreams = vec![];
+    if e.upstreams.is_some() {
+        //only upstream #[cfg_attr(rustfmt, rustfmt_skip)]
+        new_upstreams = e.upstreams.unwrap().into_iter()
+            .map(|u| Upstream{
+                id                  : Uuid::new_v4().simple().to_string(),
+                created             : now.clone(),
+                effect_id           : new_id.clone(),
+                effect_version      : 0,
+                upstream_effect     : u.upstreamEffect.clone()
+                    .map_or(None, |ue| ue.label),
+                upstream_effect_id  : u.upstreamEffect
+                    .map_or(None, |ue| ue.value),
+                number              : Some(u.upstreamNo),
+                transfer_unit       : u.upstreamTransferUnit,
+                amount              : Some(u.upstreamAmount),
+                comment             : u.upstreamComment,
+            }
         ).collect();
-
+    }
     #[cfg_attr(rustfmt, rustfmt_skip)]
     let new_effect = Effect{
         id          :  new_id,
@@ -339,6 +341,7 @@ pub fn create_new_effect<D: Db>(db: &mut D, e: NewEffect) -> Result<String> {
     for u in &new_upstreams {
         db.create_upstream(u)?;
     }
+
     Ok(new_effect.id)
 }
 
@@ -350,21 +353,26 @@ pub fn update_effect<D: Db>(db: &mut D, e: UpdateEffect) -> Result<()> {
     let now = Utc::now().timestamp() as u64;
     let mut tags = e.tags.clone();
     tags.dedup();
-    #[cfg_attr(rustfmt, rustfmt_skip)]
-    let new_upstreams: Vec<_> = e.upstreams.clone().into_iter()
-        .map( |u| Upstream{
-            id                  : Uuid::new_v4().simple().to_string(),
-            created             : now.clone(),
-            effect_id           : e.id.clone(),
-            effect_version      : e.version.clone(),
-            upstream_effect     : u.upstreamEffect.clone().map_or(None, |ue| ue.label),
-            upstream_effect_id  : u.upstreamEffect.map_or(None, |ue| ue.value),
-            number              : Some(u.upstreamNo),
-            transfer_unit       : u.upstreamTransferUnit,
-            amount              : Some(u.upstreamAmount),
-            comment             : u.upstreamComment,
-        }
+
+    let mut new_upstreams = vec![];
+    if (e.upstreams.is_some()) {
+        //only experimental #[cfg_attr(rustfmt, rustfmt_skip)]
+        new_upstreams = e.upstreams.clone().unwrap().into_iter()
+            .map(|u| Upstream{
+                id                  : Uuid::new_v4().simple().to_string(),
+                created             : now.clone(),
+                effect_id           : e.id.clone(),
+                effect_version      : e.version.clone(),
+                upstream_effect     : u.upstreamEffect.clone().map_or(None, |ue| ue.label),
+                upstream_effect_id  : u.upstreamEffect.map_or(None, |ue| ue.value),
+                number              : Some(u.upstreamNo),
+                transfer_unit       : u.upstreamTransferUnit,
+                amount              : Some(u.upstreamAmount),
+                comment             : u.upstreamComment,
+            }
         ).collect();
+    }
+
     #[cfg_attr(rustfmt, rustfmt_skip)]
     let new_effect = Effect{
         id          :  e.id,
